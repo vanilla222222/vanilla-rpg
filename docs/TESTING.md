@@ -24,7 +24,7 @@ No old Studio reward/drain remote should exist in either mode.
 - Stat modifiers are server-memory derived state; equipment/skill systems must
   rebuild them from saved progression. Modifier buffs are not persisted yet.
 - Currency counts use exact integers up to 2^53−1, not arbitrary precision.
-- Inventory is read-only; item management and crafting interfaces are deferred.
+- Equip/unequip is available; general item management and crafting are deferred.
 
 References:
 - https://create.roblox.com/docs/cloud-services/data-stores/player-data-purchasing
@@ -42,3 +42,11 @@ Increasing a resource maximum must not instantly refill it. No player-facing
 debug reward or resource-drain buttons remain.
 
 Probability helpers remain headless-tested; their activity systems are deferred.
+
+## Equipment and icons
+
+Check the five starter icons in the bag. Equip every starter item, open Stats and
+verify the properties listed in EQUIPMENT.md. Unequip to remove bonuses. Repeat
+with persistent test data and rejoin: equipped ownership and bonuses must survive.
+Test a full bag and wrong target slot; no item should disappear or duplicate.
+The sword has a damage property but does not perform attacks yet.

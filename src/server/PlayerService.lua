@@ -1,12 +1,15 @@
 -- Server-only API. No client may choose reward amounts or write profiles.
 local PlayerService = {}
-function PlayerService.new(profile, Stats, definitions, util, clock, changed, Resources)
+function PlayerService.new(profile, Stats, definitions, util, clock, changed, Resources, Equipment)
     local entries = {}
     local api = {}
     function api.attach(userId, session)
         assert(not entries[userId], "Player already attached")
         local stats = Stats.new(definitions, util)
-        entries[userId] = {session = session, stats = stats, values = stats.calculate(), closing = false, busy = false}
+        local modifiers=Equipment and Equipment.modifiers(session.data) or {}
+        for id,change in pairs(modifiers)do stats.set(id,change)end
+        local values=stats.calculate()
+        entries[userId] = {session = session, stats = stats, modifiers=modifiers, values = values, closing = false, busy = false}
         entries[userId].resources = Resources.new(definitions, util, entries[userId].values)
         return entries[userId]
     end
@@ -21,7 +24,7 @@ function PlayerService.new(profile, Stats, definitions, util, clock, changed, Re
         local entry = entries[userId]
         return {schemaVersion = 3, coins = entry.session.data.coins, bank = entry.session.data.bank,
             gameXP = entry.session.data.gameXP, gameLevel = 1 + entry.session.data.gameXP / 100,
-            inventory = util.copy(entry.session.data.inventory), equipment = util.copy(entry.session.data.equipment),
+            inventory = util.copy(entry.session.data.inventory), equipment = util.copy(entry.session.data.equipment), equipmentItems = util.copy(entry.session.data.equipmentItems),
             skills = util.copy(entry.session.data.skills), stats = util.copy(entry.values), resources = entry.resources.snapshot(), sprinting = entry.sprinting or false}
     end
     function api.grantCoins(userId, amount)
@@ -37,6 +40,7 @@ function PlayerService.new(profile, Stats, definitions, util, clock, changed, Re
     end
     function api.setModifier(userId, source, modifier)
         assert(api.active(userId), "Profile is not active")
+        assert(type(source)=="string" and not source:match("^equipment:"),"Equipment modifier sources are reserved")
         -- Validate on a fresh calculator first, then full composition. Roll back on overflow.
         local previous = entries[userId].modifiers or {}
         local candidate = util.copy(previous); candidate[source] = modifier
@@ -49,6 +53,7 @@ function PlayerService.new(profile, Stats, definitions, util, clock, changed, Re
         changed(userId, "stats")
     end
     function api.removeModifier(userId, source)
+        assert(type(source)=="string" and not source:match("^equipment:"),"Equipment modifier sources are reserved")
         assert(api.active(userId), "Profile is not active")
         local candidate = util.copy(entries[userId].modifiers or {})
         candidate[source] = nil
@@ -59,6 +64,23 @@ function PlayerService.new(profile, Stats, definitions, util, clock, changed, Re
         entries[userId].values = values
         entries[userId].resources.reconcile(values)
         changed(userId, "stats")
+    end
+    function api.changeEquipment(userId,action,slot,target)
+        assert(api.active(userId) and Equipment,"Equipment unavailable")
+        local entry=entries[userId]
+        local data
+        if action=="equip" then data=Equipment.equip(entry.session.data,slot,target)
+        elseif action=="unequip" then data=Equipment.unequip(entry.session.data,slot)
+        else error("Unknown equipment action")end
+        local modifiers={}
+        for id,change in pairs(entry.modifiers or {})do if not id:match("^equipment:")then modifiers[id]=change end end
+        for id,change in pairs(Equipment.modifiers(data))do modifiers[id]=change end
+        local calculator=Stats.new(definitions,util)
+        for id,change in pairs(modifiers)do calculator.set(id,change)end
+        local values=calculator.calculate() -- No profile or stat mutation until all checks pass.
+        entry.session.data,entry.modifiers,entry.stats,entry.values=data,modifiers,calculator,values
+        entry.resources.reconcile(values)
+        changed(userId,"stats")
     end
     function api.setResource(userId, id, value, silent)
         assert(api.active(userId), "Profile is not active")

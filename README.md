@@ -1,7 +1,8 @@
 # Vanilla RPG
 
 A Roblox RPG inspired by collection-based progression. First milestone: player
-data and stats. Inventory, equipment, crafting and gathering are not implemented yet.
+data and stats. Inventory ownership and equipment are implemented for the starter kit. General
+inventory management, crafting and gathering are not implemented yet.
 
 ## Linux Mint / Vinegar quick start
 
@@ -57,7 +58,8 @@ Engine behavior and real DataStore requests have not been verified in this envir
 - One-time starter kit on join: axe, pickaxe, sword, hoe and fishing rod.
 - Validated item catalog: nine types, rarity/policy metadata, stat modifiers and
   twenty provisional examples. See [item definitions](docs/ITEMS.md).
-- Read-only Inventory window, complete Stats window and compact bottom-left resource HUD.
+- Inventory equip/unequip controls, five procedural starter icons, complete Stats
+  window and compact bottom-left resource HUD. See [equipment](docs/EQUIPMENT.md).
 - Initial test baseplate. Unspecified numeric ceilings remain provisional balance.
 
 ## Source layout

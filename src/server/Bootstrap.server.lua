@@ -7,6 +7,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Util = require(Shared.TableUtil)
 local Definitions = require(Shared.StatDefinitions)
 local ItemCatalog = require(Shared.ItemCatalog).create(require(Shared.ItemDefinitions),require(Shared.ItemTypes),Definitions,Util)
+local Equipment = require(script.Parent.Equipment).create(ItemCatalog,Util)
 local Profile = require(script.Parent.Profile).create(Util)
 local Config = require(script.Parent.Config)
 local temporary = RunService:IsStudio() and not Config.PersistStudio
@@ -33,11 +34,15 @@ local snapshotEvent = Instance.new("RemoteEvent")
 snapshotEvent.Name, snapshotEvent.Parent = "Snapshot", remotes
 local requestEvent = Instance.new("RemoteEvent")
 requestEvent.Name, requestEvent.Parent = "RequestSnapshot", remotes
+local equipmentEvent = Instance.new("RemoteEvent")
+equipmentEvent.Name,equipmentEvent.Parent="Equipment",remotes
+local equipmentResult = Instance.new("RemoteEvent")
+equipmentResult.Name,equipmentResult.Parent="EquipmentResult",remotes
 local sprintEvent = Instance.new("RemoteEvent")
 sprintEvent.Name, sprintEvent.Parent = "SetSprinting", remotes
 remotes.Parent = ReplicatedStorage -- Publish only once all endpoints exist.
 local closing, loading, saving = false, 0, 0
-local requestTimes, sprintTimes = {}, {}
+local requestTimes, sprintTimes, equipmentTimes = {}, {}, {}
 local healthConnections, writingHealth = {}, {}
 local service
 local function publish(userId, reason)
@@ -61,7 +66,7 @@ local function publish(userId, reason)
     end
     snapshotEvent:FireClient(player, snapshot)
 end
-service = require(script.Parent.PlayerService).new(Profile, require(script.Parent.Stats), Definitions, Util, os.time, publish, require(script.Parent.Resources))
+service = require(script.Parent.PlayerService).new(Profile, require(script.Parent.Stats), Definitions, Util, os.time, publish, require(script.Parent.Resources), Equipment)
 
 local function save(player, release)
     local entry = service.get(player.UserId)
@@ -96,9 +101,16 @@ local function joined(player)
             local released, problem = pcall(persistence.save, result, true)
             if not released then warn("Late load release failed: " .. tostring(problem)) end
         else
-            service.attach(player.UserId, result)
-            player:SetAttribute("ProfileLoaded", true)
-            publish(player.UserId)
+            local attached,problem=pcall(service.attach,player.UserId,result)
+            if attached then
+                player:SetAttribute("ProfileLoaded", true)
+                publish(player.UserId)
+            else
+                warn("Equipment/profile attach failed: "..tostring(problem))
+                local released,releaseProblem=pcall(persistence.save,result,true)
+                if not released then warn(tostring(releaseProblem))end
+                player:Kick("Your equipment data could not load safely. Please try again.")
+            end
         end
     else
         warn("Profile load failed for " .. player.UserId .. ": " .. tostring(result))
@@ -132,6 +144,23 @@ sprintEvent.OnServerEvent:Connect(function(player, enabled)
     sprintTimes[player] = now
     service.setSprinting(player.UserId, enabled)
 end)
+equipmentEvent.OnServerEvent:Connect(function(player,action,slot,target)
+    if not service.active(player.UserId) or (action~="equip" and action~="unequip") then return end
+    if type(slot)~="string" or #slot>32 or (target~=nil and (type(target)~="string" or #target>32))then return end
+    local now=os.clock()
+    if now-(equipmentTimes[player] or -math.huge)<.15 then return end
+    equipmentTimes[player]=now
+    local ok,problem=pcall(service.changeEquipment,player.UserId,action,slot,target)
+    local message="Equipment updated"
+    if not ok then
+        local raw=tostring(problem)
+        if raw:find("Inventory is full",1,true)then message="Inventory is full. Make room before unequipping."
+        elseif raw:find("requirement not met",1,true)then message="You do not meet this item's requirements."
+        elseif raw:find("does not fit",1,true)then message="That item does not fit this equipment slot."
+        else message="Unable to equip that item. Select an owned equipment item and try again."end
+    end
+    equipmentResult:FireClient(player,ok,message)
+end)
 local elapsed = 0
 RunService.Heartbeat:Connect(function(dt)
     if closing then return end
@@ -153,7 +182,7 @@ local function connectPlayer(player)
 end
 Players.PlayerAdded:Connect(connectPlayer)
 Players.PlayerRemoving:Connect(function(player)
-    requestTimes[player], sprintTimes[player] = nil, nil
+    requestTimes[player], sprintTimes[player], equipmentTimes[player] = nil, nil, nil
     if healthConnections[player.UserId] then healthConnections[player.UserId]:Disconnect(); healthConnections[player.UserId] = nil end
     writingHealth[player.UserId] = nil
     save(player, true)

@@ -15,7 +15,7 @@ function Profile.new(now)
     return {
         schemaVersion = Profile.VERSION, createdAt = now, updatedAt = now,
         coins = 0, bank = 0, gameXP = 0, skills = skills,
-        inventory = {capacity = 30, slots = {}}, equipment = equipment,
+        inventory = {capacity = 30, slots = {}}, equipment = equipment, equipmentItems = {},
         talismans = {}, museum = {}, quests = {}, collections = {},
         storage = {stacks = {}, unique = {}}, unlocks = {}, legacy = {},
     }

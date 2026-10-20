@@ -1,29 +1,31 @@
 {
-  "checkedAt": "2026-10-20T18:09:33.959889+00:00",
+  "checkedAt": "2026-10-20T18:18:33.011415+00:00",
   "coreTests": {
     "runner": "texlua (portable Lua core, not Roblox/Luau engine)",
-    "passed": 38,
-    "output": "PASS independent defaults and copy-on-load\nPASS reconciliation preserves progress and unknown extension fields\nPASS corrupt, future and non-finite profiles fail closed\nPASS reward and spending validation; no overflow or negative spending\nPASS stat ordering, formula, source replacement and defensive copying\nPASS stat bounds and invalid operation guards\nPASS atomic lease excludes a second server, saves and releases\nPASS expired lease cannot save or overwrite a new owner\nPASS corrupt data never becomes a blank overwrite\nPASS transient failures retry; persistent failures do not create defaults\nPASS idempotent retry retains previously stored data\nPASS player snapshots are private copies and exclude profile internals\nPASS modifier changes are transactional and closing blocks mutation\nPASS removing a modifier cannot commit an overflowing composition\nPASS all definitive defaults and formula-only maxima match the design\nPASS defined dependency chains, missing references and cycles\nPASS wisdom and chance stat clamps; total crit and ability multipliers\nPASS fortune guaranteed counts, remainder boundaries and effective cap\nPASS mining spread is total blocks with no recursive or extra base block\nPASS resources regenerate by elapsed seconds and clamp without free healing\nPASS resource updates are independent of frame partition and cannot regenerate the dead\nPASS player modifiers clamp current resources; expired sessions cannot progress\nPASS v2 template contains requested maps, skill levels and all equipment slots\nPASS legacy migration archives unsplittable combat XP and preserves coins\nPASS missing fields repair without deleting donations, quests, equipment or balances\nPASS joining immediately persists new template and migrated repairs\nPASS canonical balances take precedence over deprecated aliases without adding coins\nPASS private snapshot computes game level from exact integer XP\nPASS item examples cover all types and preserve permanent IDs\nPASS normalized defaults do not mutate raw or catalog state\nPASS equipment compatibility follows subtype and all four weapon slots\nPASS unique gear, stack limits and protected quest policies\nPASS invalid definition fields and mismatched subtypes fail early\nPASS items can only modify definitive stats with finite supported operations\nPASS requirements and effect references validate without executing gameplay\nPASS starter kit grants five valid unique items once and survives rejoin\nPASS starter grant preserves occupied slots and does not duplicate after item removal\nPASS starter grant defers full bags without partial edits or overwritten items\n38 foundation tests passed; Roblox engine integration remains unverified.\n"
+    "passed": 48,
+    "output": "PASS independent defaults and copy-on-load\nPASS reconciliation preserves progress and unknown extension fields\nPASS corrupt, future and non-finite profiles fail closed\nPASS reward and spending validation; no overflow or negative spending\nPASS stat ordering, formula, source replacement and defensive copying\nPASS stat bounds and invalid operation guards\nPASS atomic lease excludes a second server, saves and releases\nPASS expired lease cannot save or overwrite a new owner\nPASS corrupt data never becomes a blank overwrite\nPASS transient failures retry; persistent failures do not create defaults\nPASS idempotent retry retains previously stored data\nPASS player snapshots are private copies and exclude profile internals\nPASS modifier changes are transactional and closing blocks mutation\nPASS removing a modifier cannot commit an overflowing composition\nPASS all definitive defaults and formula-only maxima match the design\nPASS defined dependency chains, missing references and cycles\nPASS wisdom and chance stat clamps; total crit and ability multipliers\nPASS fortune guaranteed counts, remainder boundaries and effective cap\nPASS mining spread is total blocks with no recursive or extra base block\nPASS resources regenerate by elapsed seconds and clamp without free healing\nPASS resource updates are independent of frame partition and cannot regenerate the dead\nPASS player modifiers clamp current resources; expired sessions cannot progress\nPASS v2 template contains requested maps, skill levels and all equipment slots\nPASS legacy migration archives unsplittable combat XP and preserves coins\nPASS missing fields repair without deleting donations, quests, equipment or balances\nPASS joining immediately persists new template and migrated repairs\nPASS canonical balances take precedence over deprecated aliases without adding coins\nPASS private snapshot computes game level from exact integer XP\nPASS item examples cover all types and preserve permanent IDs\nPASS normalized defaults do not mutate raw or catalog state\nPASS equipment compatibility follows subtype and all four weapon slots\nPASS unique gear, stack limits and protected quest policies\nPASS invalid definition fields and mismatched subtypes fail early\nPASS items can only modify definitive stats with finite supported operations\nPASS requirements and effect references validate without executing gameplay\nPASS starter tools equip and apply their definitive stats immediately\nPASS unequipping restores stats and returns the same unique instance\nPASS equipped items and stat bonuses reconstruct from saved profile\nPASS invalid slots, wrong equipment types, missing ownership and replay do not mutate\nPASS swapping a full bag preserves the old and new equipment instances\nPASS multiple equipment copies do not stack the same slot source\nPASS duplicate references and broken equipment records fail closed\nPASS requirements are checked on the server and talismans cannot fill gear slots\nPASS equipping vitality changes maximum without healing and unequip clamps\nPASS equipped ownership survives SessionStore save/release and reload\nPASS starter kit grants five valid unique items once and survives rejoin\nPASS starter grant preserves occupied slots and does not duplicate after item removal\nPASS starter grant defers full bags without partial edits or overwritten items\n48 foundation tests passed; Roblox engine integration remains unverified.\n"
   },
   "placeBuild": {
     "tool": "Rojo 7.7.1",
     "passed": true,
-    "sourceMapping": "Rojo mapping passed: 17 scripts match source; persistence stays server-only; spawn exists."
+    "sourceMapping": "Rojo mapping passed: 19 scripts match source; persistence stays server-only; spawn exists."
   },
   "unverified": [
-    "Starter-kit join flow in Roblox Studio",
+    "Starter icons, equipment controls and live stats in Roblox Studio",
     "Real DataStore round trips and engine integration"
   ],
   "sourceSha256": {
     "default.project.json": "b08f44f9719ef4e768a80eb1d8eb1912f34c87a54fe31a32f1ae3d22030b1205",
     "rokit.toml": "615025a4372c38deb6b977cb8defebab3acd1b55e8fc1424c105462cadf2df35",
     "src/character/Health.server.lua": "1ea607fadfc944b7a1ac2d655b899c1d77c070c9fac006c141a6ab27338ac5e7",
-    "src/client/Bootstrap.client.lua": "ebc4aeb1add8161a7830d706b5e6f5dbc39ffa1ce07d2b31e8f2788a2879bd6b",
-    "src/client/InventoryUI.lua": "11a1915a780ba6945e35249592f494a162813975005b8e1a1764c7f755c63396",
-    "src/server/Bootstrap.server.lua": "2f22f5ffcb57670cb3b12789e2f062853f0577dfb951300819a5266ffe885c77",
+    "src/client/Bootstrap.client.lua": "42ae6c86bf6b1531095115c6029f5fb89f6818e557026e93f483e51beec1fa1e",
+    "src/client/InventoryUI.lua": "edfee6450253f2b55938d64a9ec79291ff3d20a2b815fd2ff9f1c13664ced9f6",
+    "src/client/ItemIcons.lua": "306a3c2914466bfeb73992c098b79785a54340bd141bcb5e6ea35ecdc21865e5",
+    "src/server/Bootstrap.server.lua": "c3f0b2855545afe19eed0ae8716029e54380b1fe231d232d7b1a365c05ac8ace",
     "src/server/Config.lua": "8e75fcbe5282c22e80af801483cbfddecaa62b65de5117edcf15d85dbba06f4f",
-    "src/server/PlayerService.lua": "65573904e79434ff98baa35ffff09d87f98e8201e63fd8f4a60b9608ac729593",
-    "src/server/Profile.lua": "523ba77d13a2ab3e392521086f2d40d4af81a3596d5755087098e6ca8b8bcda8",
+    "src/server/Equipment.lua": "364ae3322f1f5e0c09ce516f0ec7830ae197735b44079a510c01290adbdc1103",
+    "src/server/PlayerService.lua": "17e720e053a2be3e7383821443698a0bebcad7b5e98febbaa7c7b31d80fcd434",
+    "src/server/Profile.lua": "f61df5a4634fd8c0f0a54db30fd2e6729e110397bdc21de0a642238737c435bf",
     "src/server/Resources.lua": "faf3b2d0815f8100381b178bf808c13abe38ed8b58d87c5bb15186832bf5b10d",
     "src/server/SessionStore.lua": "7709a2005fffab56fecb614e28ec72578f3a0056085add3ded7342bc120cf6d0",
     "src/server/StarterItems.lua": "0ab09ce97bfd55b94e58a58749cffd40b4e939c3094c0a2963e25498fefa8eae",
@@ -34,8 +36,9 @@
     "src/shared/StatDefinitions.lua": "daf4f7eb2bf90d2c0e954c0391b0020e9c999065406d33dd8904e6cd66b20844",
     "src/shared/StatRules.lua": "ec79a4efac9131224f17350df72e1210c62fc6cd8ba6bf06dbe48c2ca81cb3b8",
     "src/shared/TableUtil.lua": "0f0f97cf28f6d812c60f2f97fac858c0e8496a5b6837ff858dc96bc4f8c6775b",
+    "tests/equipment.lua": "e0c0f3f13cc3ad8ef222de5f923fd6635108f87098a2e61b87771377ef4f4f78",
     "tests/items.lua": "c8aec4979ebb2135bf1e0d1bd9d9ae64d379a526fddec3666b6ca9d8e3648040",
-    "tests/run.lua": "09e69646ef7a49ac07743763bf062061b8f2cac469f493eeda380711bc5e2cc3",
+    "tests/run.lua": "55a7da82001d675a9d2a0e3384aa0896f8d1a7c1bb1bf93d855b4828f8561266",
     "tools/check-build.py": "5cadec8e7a6c86d9bbaa41ca9cae3bf6971b958c4daba4099ce52dada28f2cdf"
   }
 }

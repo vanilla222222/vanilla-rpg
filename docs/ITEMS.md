@@ -77,7 +77,8 @@ this change does not delete or migrate saved items.
 ## Scope
 
 Twenty examples cover all nine types, all tool types, five armor slots and four
-weapon types. General item moving/stack splitting, instance creation beyond the starter kit, item use, crafting,
-trade enforcement, equipped stat application and acquisition are deferred.
+weapon types. Equip/unequip and equipped stat application are implemented; see EQUIPMENT.md.
+General item moving/stack splitting, instance creation beyond the starter kit,
+item use, crafting, trade enforcement and other acquisition are deferred.
 Next inventory work should store definition IDs separately from unique instance
 IDs and enforce these policies on the server.

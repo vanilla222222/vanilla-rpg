@@ -92,7 +92,10 @@ for _,group in ipairs({"definitive","defined","dynamic"})do
     for _,id in ipairs(keys)do order=order+1;statLabels[id]=row(statsContent,pretty(id),"—",order)end
 end
 windows.Inventory.panel:FindFirstChildOfClass("UISizeConstraint").MaxSize=Vector2.new(1120,650)
-local renderInventory=require(script.Parent.InventoryUI).mount(inventoryContent,make,text,round,color,items,itemTypes)
+local weaponLabels={}
+order=order+1;section(statsContent,"EQUIPPED WEAPON PROPERTIES",order)
+for i=1,4 do order=order+1;weaponLabels[i]=row(statsContent,"Weapon "..i,"Empty",order)end
+local renderInventory=require(script.Parent.InventoryUI).mount(inventoryContent,make,text,round,color,items,itemTypes,remotes)
 local sprinting=false
 local function setSprint(enabled)sprinting=enabled;remotes.SetSprinting:FireServer(enabled)end
 sprint.Activated:Connect(function()setSprint(not sprinting)end)
@@ -122,6 +125,12 @@ remotes.Snapshot.OnClientEvent:Connect(function(data)
         else label.Text=number(data.stats[id])..(definitions.definitive[id] and (" "..definitions.definitive[id].unit) or "")end
     end
     sprinting=data.sprinting;sprint.Text=sprinting and "SPRINT ON" or "SPRINT OFF"
+    for i,label in ipairs(weaponLabels)do
+        local instanceId=data.equipment['weapon'..i]
+        local item=instanceId and data.equipmentItems[instanceId]
+        local definition=item and items[item.itemId]
+        label.Text=definition and (tostring(definition.baseDamage).." damage") or "Empty"
+    end
     renderInventory(data)
 end)
 remotes.RequestSnapshot:FireServer()

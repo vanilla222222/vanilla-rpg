@@ -25,6 +25,7 @@ equipment
   brooch, artifact, ring, bracelet, necklace
   hoe, pickaxe, axe, fishingRod
   weapon1, weapon2, weapon3, weapon4
+equipmentItems = {}  -- full records keyed by equipped instance ID
 inventory = { capacity = 30, slots = {} }
 quests = {}
 collections = {}
@@ -33,8 +34,8 @@ legacy = {}
 ```
 
 Each equipment slot starts as `false` (empty), so every slot survives JSON storage.
-An occupied slot stores a nonempty item-instance ID. Instance definitions and
-item/equipment management will be implemented in the inventory milestone.
+An occupied slot stores a nonempty item-instance ID. Equipped records live in equipmentItems. Equip/unequip and trusted stat application
+are implemented; general inventory management is deferred. See EQUIPMENT.md.
 Inventory slot keys are strings, consistent with the profile's JSON-map format.
 Quests, museum donations and talisman ownership currently have empty map containers;
 their individual record formats and acquisition mechanics are deliberately deferred.
@@ -67,10 +68,10 @@ level. A TEST DATA marker identifies temporary Studio mode.
 
 Inventory and Stats buttons open dismissible windows. Keyboard shortcuts: I for
 Inventory, C for Stats, Shift for sprint. Clicking outside or using the close
-button dismisses a window. Inventory is read-only and displays 30 square slots in six columns/five rows,
+button dismisses a window. Inventory displays 30 square slots in six columns/five rows,
 a 3x3 crafting grid to the left, and all 18 equipment slots to the right.
 Crafting inputs/output are placeholders; selecting any slot inspects its label.
-The attached three-panel layout scales down and scrolls on narrow screens; it is not an item-management implementation. Stats lists
+The attached three-panel layout scales down and scrolls on narrow screens; equip/unequip is available, while other item management remains deferred. Stats lists
 all definitive, defined and dynamic stats.
 
 ## Real saving in Studio

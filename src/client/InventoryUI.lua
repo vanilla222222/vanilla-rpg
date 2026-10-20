@@ -1,16 +1,16 @@
--- Read-only inventory layout. Crafting/equipping actions are intentionally deferred.
+-- Inventory and equipment controls; crafting remains a visual placeholder.
 local InventoryUI = {}
-function InventoryUI.mount(content, make, text, round, color, items, itemTypes)
+function InventoryUI.mount(content, make, text, round, color, items, itemTypes, remotes)
     for _,child in ipairs(content:GetChildren()) do child:Destroy() end
     content.AutomaticCanvasSize=Enum.AutomaticSize.None
     content.ScrollingDirection=Enum.ScrollingDirection.XY
-    local root=make("Frame",{Name="InventoryLayout",Size=UDim2.fromOffset(1000,474),BackgroundTransparency=1},content)
+    local root=make("Frame",{Name="InventoryLayout",Size=UDim2.fromOffset(1000,516),BackgroundTransparency=1},content)
     local scale=make("UIScale",{Scale=1},root)
     local function resize()
         local factor=math.clamp(content.AbsoluteSize.X/1000,.7,1)
         scale.Scale=factor
         root.Position=UDim2.fromOffset(math.max(0,(content.AbsoluteSize.X-1000*factor)/2),0)
-        content.CanvasSize=UDim2.fromOffset(1000*factor,474*factor)
+        content.CanvasSize=UDim2.fromOffset(1000*factor,516*factor)
     end
     content:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize);resize()
     local function panel(name,x,width)
@@ -23,9 +23,29 @@ function InventoryUI.mount(content, make, text, round, color, items, itemTypes)
     local crafting=panel("Crafting",0,210)
     local bag=panel("Inventory",222,422)
     local equipment=panel("Equipment",656,344)
-    local status=text(root,"Select a slot to inspect it. Crafting and equipment actions are not enabled yet.",UDim2.fromOffset(984,36),UDim2.fromOffset(8,436),12,color.muted)
+    local status=text(root,"Select an item, then Equip. Select an equipment slot to Unequip.",UDim2.fromOffset(984,36),UDim2.fromOffset(8,436),12,color.muted)
     status.TextWrapped=true
-    local function slot(parent,name,x,y,size,caption)
+    local selectedBag,selectedEquipment
+    local function actionButton(label,x)
+        local b=make("TextButton",{Text=label,Position=UDim2.fromOffset(x,478),Size=UDim2.fromOffset(196,30),BackgroundColor3=color.card,
+            Font=Enum.Font.GothamBold,TextColor3=color.text,TextSize=12},root);round(b,6);return b
+    end
+    local equipButton=actionButton("Equip selected item",222)
+    local unequipButton=actionButton("Unequip selected slot",428)
+    equipButton.Activated:Connect(function()
+        if selectedBag then remotes.Equipment:FireServer("equip",selectedBag,selectedEquipment)
+        else status.Text="Select an item in your inventory first."end
+    end)
+    unequipButton.Activated:Connect(function()
+        if selectedEquipment then remotes.Equipment:FireServer("unequip",selectedEquipment)
+        else status.Text="Select an equipment slot first."end
+    end)
+    remotes.EquipmentResult.OnClientEvent:Connect(function(ok,message)
+        status.Text=message
+        if ok then selectedBag,selectedEquipment=nil,nil end
+    end)
+    local Icons=require(script.Parent.ItemIcons)
+    local function slot(parent,name,x,y,size,caption,selection)
         local b=make("TextButton",{Name=name,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(size,size),Text="",
             BackgroundColor3=color.panel,AutoButtonColor=true},parent)
         round(b,7);local border=make("UIStroke",{Color=color.line,Transparency=.25},b)
@@ -34,20 +54,43 @@ function InventoryUI.mount(content, make, text, round, color, items, itemTypes)
         local quantity=text(b,"",UDim2.new(1,-8,0,14),UDim2.new(0,4,1,-17),10,color.accent)
         quantity.TextXAlignment=Enum.TextXAlignment.Right
         local detail=name.." · Empty"
-        b.Activated:Connect(function()status.Text=detail end)
+        b.Activated:Connect(function()
+            status.Text=detail
+            if selection then selection()end
+        end)
+        local icon
         return function(item,empty)
             local id=type(item)=="table" and (item.itemId or item.id) or item
             local title=id and (items[id] and items[id].name or tostring(id)) or nil
-            label.Text=title or empty or "—"
+            if icon then icon:Destroy();icon=nil end
+            if id then icon=Icons.draw(b,id,make)end
+            if icon then
+                label.Position=UDim2.new(0,4,1,-20);label.Size=UDim2.new(1,-8,0,18)
+                label.TextSize=9;label.Text=title:gsub("^Starter ","")
+            else
+                label.Position=UDim2.fromOffset(4,4);label.Size=UDim2.new(1,-8,1,-8)
+                label.TextSize=11;label.Text=title or empty or "—"
+            end
             local definition=id and items[id]
             local rarity=definition and itemTypes.rarities[definition.rarity]
             local tint=rarity and Color3.fromRGB(table.unpack(rarity.color)) or color.line
             border.Color=tint
             label.TextColor3=title and (rarity and tint or color.text) or color.muted
-            quantity.Text=type(item)=="table" and item.quantity and ("×"..tostring(item.quantity)) or ""
+            quantity.Text=type(item)=="table" and item.quantity and item.quantity>1 and ("×"..tostring(item.quantity)) or ""
             detail=name.." · "..(title or "Empty")
             if definition then
                 detail=detail.." · "..rarity.label.." · "..definition.kind
+                if definition.baseDamage then detail=detail.." · Damage "..definition.baseDamage end
+                local bonuses={}
+                for stat,change in pairs(definition.stats)do
+                    local parts={}
+                    if change.flat then table.insert(parts,string.format("%+g",change.flat))end
+                    if change.percent then table.insert(parts,string.format("%+g%%",100*change.percent))end
+                    if change.multiplier then table.insert(parts,"×"..change.multiplier)end
+                    table.insert(bonuses,stat.." "..table.concat(parts," "))
+                end
+                table.sort(bonuses)
+                if #bonuses>0 then detail=detail.." · "..table.concat(bonuses,", ")end
                 if #definition.description>0 then detail=detail.." — "..definition.description end
             end
         end
@@ -55,7 +98,9 @@ function InventoryUI.mount(content, make, text, round, color, items, itemTypes)
     local bagSlots={}
     for i=1,30 do
         local x,y=(i-1)%6,math.floor((i-1)/6)
-        bagSlots[i]=slot(bag,"Slot "..i,16+x*66,52+y*66,60)
+        bagSlots[i]=slot(bag,"Slot "..i,16+x*66,52+y*66,60,nil,function()
+            selectedBag=tostring(i);selectedEquipment=nil
+        end)
         local number=text(bag,tostring(i),UDim2.fromOffset(18,12),UDim2.fromOffset(20+x*66,55+y*66),9,color.muted)
         number.ZIndex=2
     end
@@ -76,16 +121,16 @@ function InventoryUI.mount(content, make, text, round, color, items, itemTypes)
     for row,group in ipairs(groups) do
         local y=45+(row-1)*92
         text(equipment,group[1],UDim2.fromOffset(316,18),UDim2.fromOffset(14,y),10,color.muted)
-        for col,id in ipairs(group[2]) do equipped[id]=slot(equipment,pretty(id),14+(col-1)*64,y+24,56,pretty(id)) end
+        for col,id in ipairs(group[2]) do equipped[id]=slot(equipment,pretty(id),14+(col-1)*64,y+24,56,pretty(id),function()selectedEquipment=id end) end
     end
     local lastKey
     return function(data)
-        local key=game:GetService("HttpService"):JSONEncode({data.inventory,data.equipment})
+        local key=game:GetService("HttpService"):JSONEncode({data.inventory,data.equipment,data.equipmentItems})
         if lastKey==key then return end;lastKey=key
         local occupied=0
         for i=1,30 do local item=data.inventory.slots[tostring(i)];bagSlots[i](item);if item then occupied=occupied+1 end end
         count.Text=occupied.." / 30 slots occupied"
-        for id,update in pairs(equipped)do update(data.equipment[id],pretty(id)) end
+        for id,update in pairs(equipped)do update(data.equipment[id] and data.equipmentItems[data.equipment[id]] or nil,pretty(id)) end
     end
 end
 return InventoryUI
