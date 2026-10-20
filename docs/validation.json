@@ -1,17 +1,17 @@
 {
-  "checkedAt": "2026-10-20T17:59:14.354761+00:00",
+  "checkedAt": "2026-10-20T18:09:33.959889+00:00",
   "coreTests": {
     "runner": "texlua (portable Lua core, not Roblox/Luau engine)",
-    "passed": 35,
-    "output": "PASS independent defaults and copy-on-load\nPASS reconciliation preserves progress and unknown extension fields\nPASS corrupt, future and non-finite profiles fail closed\nPASS reward and spending validation; no overflow or negative spending\nPASS stat ordering, formula, source replacement and defensive copying\nPASS stat bounds and invalid operation guards\nPASS atomic lease excludes a second server, saves and releases\nPASS expired lease cannot save or overwrite a new owner\nPASS corrupt data never becomes a blank overwrite\nPASS transient failures retry; persistent failures do not create defaults\nPASS idempotent retry retains previously stored data\nPASS player snapshots are private copies and exclude profile internals\nPASS modifier changes are transactional and closing blocks mutation\nPASS removing a modifier cannot commit an overflowing composition\nPASS all definitive defaults and formula-only maxima match the design\nPASS defined dependency chains, missing references and cycles\nPASS wisdom and chance stat clamps; total crit and ability multipliers\nPASS fortune guaranteed counts, remainder boundaries and effective cap\nPASS mining spread is total blocks with no recursive or extra base block\nPASS resources regenerate by elapsed seconds and clamp without free healing\nPASS resource updates are independent of frame partition and cannot regenerate the dead\nPASS player modifiers clamp current resources; expired sessions cannot progress\nPASS v2 template contains requested maps, skill levels and all equipment slots\nPASS legacy migration archives unsplittable combat XP and preserves coins\nPASS missing fields repair without deleting donations, quests, equipment or balances\nPASS joining immediately persists new template and migrated repairs\nPASS canonical balances take precedence over deprecated aliases without adding coins\nPASS private snapshot computes game level from exact integer XP\nPASS item examples cover all types and preserve permanent IDs\nPASS normalized defaults do not mutate raw or catalog state\nPASS equipment compatibility follows subtype and all four weapon slots\nPASS unique gear, stack limits and protected quest policies\nPASS invalid definition fields and mismatched subtypes fail early\nPASS items can only modify definitive stats with finite supported operations\nPASS requirements and effect references validate without executing gameplay\n35 foundation tests passed; Roblox engine integration remains unverified.\n"
+    "passed": 38,
+    "output": "PASS independent defaults and copy-on-load\nPASS reconciliation preserves progress and unknown extension fields\nPASS corrupt, future and non-finite profiles fail closed\nPASS reward and spending validation; no overflow or negative spending\nPASS stat ordering, formula, source replacement and defensive copying\nPASS stat bounds and invalid operation guards\nPASS atomic lease excludes a second server, saves and releases\nPASS expired lease cannot save or overwrite a new owner\nPASS corrupt data never becomes a blank overwrite\nPASS transient failures retry; persistent failures do not create defaults\nPASS idempotent retry retains previously stored data\nPASS player snapshots are private copies and exclude profile internals\nPASS modifier changes are transactional and closing blocks mutation\nPASS removing a modifier cannot commit an overflowing composition\nPASS all definitive defaults and formula-only maxima match the design\nPASS defined dependency chains, missing references and cycles\nPASS wisdom and chance stat clamps; total crit and ability multipliers\nPASS fortune guaranteed counts, remainder boundaries and effective cap\nPASS mining spread is total blocks with no recursive or extra base block\nPASS resources regenerate by elapsed seconds and clamp without free healing\nPASS resource updates are independent of frame partition and cannot regenerate the dead\nPASS player modifiers clamp current resources; expired sessions cannot progress\nPASS v2 template contains requested maps, skill levels and all equipment slots\nPASS legacy migration archives unsplittable combat XP and preserves coins\nPASS missing fields repair without deleting donations, quests, equipment or balances\nPASS joining immediately persists new template and migrated repairs\nPASS canonical balances take precedence over deprecated aliases without adding coins\nPASS private snapshot computes game level from exact integer XP\nPASS item examples cover all types and preserve permanent IDs\nPASS normalized defaults do not mutate raw or catalog state\nPASS equipment compatibility follows subtype and all four weapon slots\nPASS unique gear, stack limits and protected quest policies\nPASS invalid definition fields and mismatched subtypes fail early\nPASS items can only modify definitive stats with finite supported operations\nPASS requirements and effect references validate without executing gameplay\nPASS starter kit grants five valid unique items once and survives rejoin\nPASS starter grant preserves occupied slots and does not duplicate after item removal\nPASS starter grant defers full bags without partial edits or overwritten items\n38 foundation tests passed; Roblox engine integration remains unverified.\n"
   },
   "placeBuild": {
     "tool": "Rojo 7.7.1",
     "passed": true,
-    "sourceMapping": "Rojo mapping passed: 16 scripts match source; persistence stays server-only; spawn exists."
+    "sourceMapping": "Rojo mapping passed: 17 scripts match source; persistence stays server-only; spawn exists."
   },
   "unverified": [
-    "Updated catalog startup and rarity display in Roblox Studio",
+    "Starter-kit join flow in Roblox Studio",
     "Real DataStore round trips and engine integration"
   ],
   "sourceSha256": {
@@ -20,21 +20,22 @@
     "src/character/Health.server.lua": "1ea607fadfc944b7a1ac2d655b899c1d77c070c9fac006c141a6ab27338ac5e7",
     "src/client/Bootstrap.client.lua": "ebc4aeb1add8161a7830d706b5e6f5dbc39ffa1ce07d2b31e8f2788a2879bd6b",
     "src/client/InventoryUI.lua": "11a1915a780ba6945e35249592f494a162813975005b8e1a1764c7f755c63396",
-    "src/server/Bootstrap.server.lua": "146b1f8f76c4d3517d47efc592d0d1ac4e22fa168cef855006336add42d34cc0",
+    "src/server/Bootstrap.server.lua": "2f22f5ffcb57670cb3b12789e2f062853f0577dfb951300819a5266ffe885c77",
     "src/server/Config.lua": "8e75fcbe5282c22e80af801483cbfddecaa62b65de5117edcf15d85dbba06f4f",
     "src/server/PlayerService.lua": "65573904e79434ff98baa35ffff09d87f98e8201e63fd8f4a60b9608ac729593",
     "src/server/Profile.lua": "523ba77d13a2ab3e392521086f2d40d4af81a3596d5755087098e6ca8b8bcda8",
     "src/server/Resources.lua": "faf3b2d0815f8100381b178bf808c13abe38ed8b58d87c5bb15186832bf5b10d",
-    "src/server/SessionStore.lua": "9ed88c35ca6e39d7982244623ddc6e95f5e42aa39baf74c7fddce04bf0ff7dbc",
+    "src/server/SessionStore.lua": "7709a2005fffab56fecb614e28ec72578f3a0056085add3ded7342bc120cf6d0",
+    "src/server/StarterItems.lua": "0ab09ce97bfd55b94e58a58749cffd40b4e939c3094c0a2963e25498fefa8eae",
     "src/server/Stats.lua": "a648abf757d071b3a8e2659d7621f625d7d108a0cc2dab7d1bbab0a2d0a1c470",
     "src/shared/ItemCatalog.lua": "04a10e59a159b457905ec024b2aef2874c679eb97315363ea0cac8fdd416cc95",
-    "src/shared/ItemDefinitions.lua": "e25e0238ddb73add67609cfbba483f9799b0e66784b05b620e9925d72f70221b",
+    "src/shared/ItemDefinitions.lua": "a43fc6e7da93c7edf37fc744509079c31bde2cd8bbf96fbf247ddf959055c7d9",
     "src/shared/ItemTypes.lua": "38e63eefba81b43c429dfcb54b4b7da8d685b34c256b76a78c120aa2df46f85a",
     "src/shared/StatDefinitions.lua": "daf4f7eb2bf90d2c0e954c0391b0020e9c999065406d33dd8904e6cd66b20844",
     "src/shared/StatRules.lua": "ec79a4efac9131224f17350df72e1210c62fc6cd8ba6bf06dbe48c2ca81cb3b8",
     "src/shared/TableUtil.lua": "0f0f97cf28f6d812c60f2f97fac858c0e8496a5b6837ff858dc96bc4f8c6775b",
     "tests/items.lua": "c8aec4979ebb2135bf1e0d1bd9d9ae64d379a526fddec3666b6ca9d8e3648040",
-    "tests/run.lua": "7923ae34cda120704895f80adee38dbd5317b4d65a2a8b7337cd1fe7146bfcf7",
+    "tests/run.lua": "09e69646ef7a49ac07743763bf062061b8f2cac469f493eeda380711bc5e2cc3",
     "tools/check-build.py": "5cadec8e7a6c86d9bbaa41ca9cae3bf6971b958c4daba4099ce52dada28f2cdf"
   }
 }

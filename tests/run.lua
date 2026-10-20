@@ -2,6 +2,7 @@
 local Util = dofile('src/shared/TableUtil.lua')
 local ProfileModule = dofile('src/server/Profile.lua')
 local Profile = ProfileModule.create(Util)
+local StarterItems = dofile('src/server/StarterItems.lua')
 local Resources = dofile('src/server/Resources.lua')
 local Rules = dofile('src/shared/StatRules.lua')
 local Stats = dofile('src/server/Stats.lua')
@@ -81,7 +82,7 @@ local function fixture()
         return Util.copy(nextValue)
     end
     local persistence = SessionStore.new(store, Profile, Util, {ttl = 600, clock = function() return now end,
-        sleep = function() sleeps = sleeps + 1 end})
+        sleep = function() sleeps = sleeps + 1 end, onLoad = StarterItems.grant})
     return persistence, records, function(t) now = t end, function(n) failures = n end,
         function() return calls, sleeps end
 end
@@ -282,6 +283,35 @@ test('private snapshot computes game level from exact integer XP', function()
     snapshot.equipment.helmet='fake';equal(p.equipment.helmet,false)
 end)
 dofile('tests/items.lua')(test,equal,rejects)
+test('starter kit grants five valid unique items once and survives rejoin', function()
+    local store,records=fixture();local a=store.open(1,'a')
+    local catalog=dofile('src/shared/ItemCatalog.lua').create(dofile('src/shared/ItemDefinitions.lua'),dofile('src/shared/ItemTypes.lua'),Definitions,Util)
+    local ids={}
+    for i,id in ipairs(StarterItems.ids)do
+        local item=a.data.inventory.slots[tostring(i)]
+        equal(item.itemId,id);equal(item.quantity,1);equal(catalog.get(id).maxStack,1)
+        assert(not ids[item.instanceId]);ids[item.instanceId]=true
+    end
+    assert(records.player_1.data.unlocks.starterKitV1)
+    store.save(a,true);local b=store.open(1,'b')
+    local count=0;for _ in pairs(b.data.inventory.slots)do count=count+1 end;equal(count,5)
+    equal(b.data.inventory.slots['1'].instanceId,a.data.inventory.slots['1'].instanceId)
+end)
+test('starter grant preserves occupied slots and does not duplicate after item removal', function()
+    local p=Profile.prepare(nil,100);p.inventory.slots['1']={itemId='stone',quantity=5}
+    assert(StarterItems.grant(p,1));equal(p.inventory.slots['1'].itemId,'stone')
+    equal(p.inventory.slots['2'].itemId,'starter_axe')
+    p.inventory.slots['2']=nil;assert(not StarterItems.grant(p,1));equal(p.inventory.slots['2'],nil)
+end)
+test('starter grant defers full bags without partial edits or overwritten items', function()
+    local p=Profile.prepare(nil,100)
+    for i=1,27 do p.inventory.slots[tostring(i)]={itemId='stone',quantity=1}end
+    assert(not StarterItems.grant(p,1));equal(p.unlocks.starterKitV1,nil);equal(p.inventory.slots['28'],nil)
+    p.inventory.slots['1']=nil;p.inventory.slots['2']=nil
+    assert(StarterItems.grant(p,1));equal(p.inventory.slots['3'].itemId,'stone')
+    local q=Profile.prepare(nil,100);StarterItems.grant(q,2)
+    assert(q.inventory.slots['1'].instanceId~=p.inventory.slots['1'].instanceId)
+end)
 -- Syntax-check all Roblox scripts even though engine APIs cannot run in this host.
 for _, file in ipairs({'src/server/Bootstrap.server.lua', 'src/server/Config.lua', 'src/client/Bootstrap.client.lua',
     'src/shared/ItemDefinitions.lua', 'src/character/Health.server.lua'}) do assert(loadfile(file)) end

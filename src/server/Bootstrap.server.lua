@@ -25,6 +25,7 @@ else
 end
 local persistence = require(script.Parent.SessionStore).new(store, Profile, Util, {
     ttl = Config.LeaseSeconds, clock = os.time, sleep = task.wait,
+    onLoad = require(script.Parent.StarterItems).grant,
 })
 local remotes = Instance.new("Folder")
 remotes.Name = "RPGRemotes"

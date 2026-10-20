@@ -3,7 +3,11 @@
 `ItemDefinitions.lua` is the source catalog keyed by permanent snake_case IDs.
 `ItemTypes.lua` defines type policies and rarity colors. `ItemCatalog.lua`
 validates/normalizes definitions on server and client startup and returns defensive
-copies. Items are not granted just because they are defined.
+copies. Definitions alone do not grant items. The join-time StarterItems policy grants
+axe, pickaxe, sword, hoe and fishing rod once per saved profile, including existing
+profiles on their next join. Grant and receipt are saved atomically with the profile.
+A full bag defers the whole kit until a later join with five free slots; nothing
+is overwritten. Temporary Studio mode resets the receipt on Stop/Play, as expected.
 
 ## Types
 
@@ -21,7 +25,7 @@ copies. Items are not granted just because they are defined.
 
 These stack limits and all example gear values are provisional configurable data,
 not a Minecraft-style global stack rule. The unique-instance policy describes how
-future inventory records must behave; instance creation is not implemented here.
+future inventory records must behave; only starter-kit instance creation is implemented.
 
 ## Common properties
 
@@ -73,7 +77,7 @@ this change does not delete or migrate saved items.
 ## Scope
 
 Twenty examples cover all nine types, all tool types, five armor slots and four
-weapon types. Item moving/stack splitting, instance creation, item use, crafting,
+weapon types. General item moving/stack splitting, instance creation beyond the starter kit, item use, crafting,
 trade enforcement, equipped stat application and acquisition are deferred.
 Next inventory work should store definition IDs separately from unique instance
 IDs and enforce these policies on the server.

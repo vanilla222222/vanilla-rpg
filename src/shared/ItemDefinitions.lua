@@ -1,4 +1,4 @@
--- Permanent IDs. Example values are provisional; no items are automatically granted.
+-- Permanent IDs. Example values are provisional; StarterItems grants the five-item starter kit once.
 -- ItemCatalog fills defaults and validates these records on server/client startup.
 local items = {
     oak_log={name="Oak Log",kind="material",collection="oak",tags={"wood","foraging"},description="Basic wood harvested from oak trees."},

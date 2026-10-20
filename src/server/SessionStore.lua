@@ -28,7 +28,11 @@ function SessionStore.new(store, profile, util, options)
                     if lock.id ~= token and lock.expiresAt > now then denial = "Profile is already active on another server; try again shortly"; return nil end
                 end
             end
-            local valid, data = pcall(profile.prepare, old and old.data, now)
+            local valid, data = pcall(function()
+                local prepared = profile.prepare(old and old.data, now)
+                if options.onLoad then options.onLoad(prepared, userId) end
+                return prepared
+            end)
             if not valid then denial = tostring(data); return nil end
             local nextValue = util.copy(old or {})
             nextValue.formatVersion, nextValue.data = 1, data
