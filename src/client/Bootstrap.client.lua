@@ -2,7 +2,10 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local definitions = require(ReplicatedStorage:WaitForChild("Shared").StatDefinitions)
-local items = require(ReplicatedStorage.Shared.ItemDefinitions)
+local Shared=ReplicatedStorage.Shared
+local itemTypes=require(Shared.ItemTypes)
+local itemCatalog=require(Shared.ItemCatalog).create(require(Shared.ItemDefinitions),itemTypes,definitions,require(Shared.TableUtil))
+local items=itemCatalog.all()
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("RPGRemotes")
 local color = {panel=Color3.fromRGB(19,27,39), card=Color3.fromRGB(29,40,55), line=Color3.fromRGB(58,76,97),
@@ -89,7 +92,7 @@ for _,group in ipairs({"definitive","defined","dynamic"})do
     for _,id in ipairs(keys)do order=order+1;statLabels[id]=row(statsContent,pretty(id),"—",order)end
 end
 windows.Inventory.panel:FindFirstChildOfClass("UISizeConstraint").MaxSize=Vector2.new(1120,650)
-local renderInventory=require(script.Parent.InventoryUI).mount(inventoryContent,make,text,round,color,items)
+local renderInventory=require(script.Parent.InventoryUI).mount(inventoryContent,make,text,round,color,items,itemTypes)
 local sprinting=false
 local function setSprint(enabled)sprinting=enabled;remotes.SetSprinting:FireServer(enabled)end
 sprint.Activated:Connect(function()setSprint(not sprinting)end)

@@ -1,6 +1,6 @@
 -- Read-only inventory layout. Crafting/equipping actions are intentionally deferred.
 local InventoryUI = {}
-function InventoryUI.mount(content, make, text, round, color, items)
+function InventoryUI.mount(content, make, text, round, color, items, itemTypes)
     for _,child in ipairs(content:GetChildren()) do child:Destroy() end
     content.AutomaticCanvasSize=Enum.AutomaticSize.None
     content.ScrollingDirection=Enum.ScrollingDirection.XY
@@ -28,7 +28,7 @@ function InventoryUI.mount(content, make, text, round, color, items)
     local function slot(parent,name,x,y,size,caption)
         local b=make("TextButton",{Name=name,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(size,size),Text="",
             BackgroundColor3=color.panel,AutoButtonColor=true},parent)
-        round(b,7);make("UIStroke",{Color=color.line,Transparency=.25},b)
+        round(b,7);local border=make("UIStroke",{Color=color.line,Transparency=.25},b)
         local label=text(b,caption or "—",UDim2.new(1,-8,1,-8),UDim2.fromOffset(4,4),11,color.muted)
         label.TextWrapped=true;label.TextXAlignment=Enum.TextXAlignment.Center
         local quantity=text(b,"",UDim2.new(1,-8,0,14),UDim2.new(0,4,1,-17),10,color.accent)
@@ -39,9 +39,17 @@ function InventoryUI.mount(content, make, text, round, color, items)
             local id=type(item)=="table" and (item.itemId or item.id) or item
             local title=id and (items[id] and items[id].name or tostring(id)) or nil
             label.Text=title or empty or "—"
-            label.TextColor3=title and color.text or color.muted
+            local definition=id and items[id]
+            local rarity=definition and itemTypes.rarities[definition.rarity]
+            local tint=rarity and Color3.fromRGB(table.unpack(rarity.color)) or color.line
+            border.Color=tint
+            label.TextColor3=title and (rarity and tint or color.text) or color.muted
             quantity.Text=type(item)=="table" and item.quantity and ("×"..tostring(item.quantity)) or ""
             detail=name.." · "..(title or "Empty")
+            if definition then
+                detail=detail.." · "..rarity.label.." · "..definition.kind
+                if #definition.description>0 then detail=detail.." — "..definition.description end
+            end
         end
     end
     local bagSlots={}

@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Util = require(Shared.TableUtil)
 local Definitions = require(Shared.StatDefinitions)
+local ItemCatalog = require(Shared.ItemCatalog).create(require(Shared.ItemDefinitions),require(Shared.ItemTypes),Definitions,Util)
 local Profile = require(script.Parent.Profile).create(Util)
 local Config = require(script.Parent.Config)
 local temporary = RunService:IsStudio() and not Config.PersistStudio

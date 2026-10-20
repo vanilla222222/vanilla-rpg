@@ -54,6 +54,8 @@ Engine behavior and real DataStore requests have not been verified in this envir
   `(base + sum(flat)) × (1 + sum(percent)) × product(multiplier)`, then clamps.
 - Server-only PlayerService APIs for coins and modifiers. Derived stats and current resources are not saved.
 - Private client snapshots, rate-limited snapshot requests and validated sprint controls.
+- Validated item catalog: nine types, rarity/policy metadata, stat modifiers and
+  twenty provisional examples. See [item definitions](docs/ITEMS.md).
 - Read-only Inventory window, complete Stats window and compact bottom-left resource HUD.
 - Initial test baseplate. Unspecified numeric ceilings remain provisional balance.
 
