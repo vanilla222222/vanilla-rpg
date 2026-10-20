@@ -1,0 +1,7 @@
+/build/
+/tools/bin/
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+.DS_Store

@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-10-20T16:39:34.511713+00:00",
+  "coreTests": {
+    "runner": "texlua (portable Lua core, not Roblox/Luau engine)",
+    "passed": 14,
+    "output": "PASS independent defaults and copy-on-load\nPASS reconciliation preserves progress and unknown extension fields\nPASS corrupt, future and non-finite profiles fail closed\nPASS reward and spending validation; no overflow or negative spending\nPASS stat ordering, formula, source replacement and defensive copying\nPASS stat bounds and invalid operation guards\nPASS atomic lease excludes a second server, saves and releases\nPASS expired lease cannot save or overwrite a new owner\nPASS corrupt data never becomes a blank overwrite\nPASS transient failures retry; persistent failures do not create defaults\nPASS idempotent retry retains previously stored data\nPASS player snapshots are private copies and exclude profile internals\nPASS modifier changes are transactional and closing blocks mutation\nPASS removing a modifier cannot commit an overflowing composition\n14 foundation tests passed; Roblox engine integration remains unverified.\n"
+  },
+  "placeBuild": {
+    "tool": "Rojo 7.7.1",
+    "passed": true,
+    "sourceMapping": "Rojo mapping passed: 10 scripts match source; persistence stays server-only; spawn exists."
+  },
+  "unverified": [
+    "Roblox Studio/Vinegar play test",
+    "Real DataStore persistence and throttling",
+    "Engine shutdown, player lifecycle and client networking"
+  ],
+  "sourceSha256": {
+    "default.project.json": "f3449c9e7a83d9fd96655af473fd7d83f2f9674bad0f02c2b9e4f551cb03a237",
+    "rokit.toml": "615025a4372c38deb6b977cb8defebab3acd1b55e8fc1424c105462cadf2df35",
+    "src/client/Bootstrap.client.lua": "b73fe5c7296e8553d650c6a633b71bb820ef5f1203ae0baf809e655cfc5ac162",
+    "src/server/Bootstrap.server.lua": "bbdd359864aed3a27f3f2ba0e9e82f8df7bb996caafa3222772c7e6bbe8bb19a",
+    "src/server/Config.lua": "8e75fcbe5282c22e80af801483cbfddecaa62b65de5117edcf15d85dbba06f4f",
+    "src/server/PlayerService.lua": "493a2f65c345e371d0a30ab5634a310f90e25392eb4a035db2730485e722ca36",
+    "src/server/Profile.lua": "e558fd3e40ce72e86bb38daffe59088d979313f203d12afcc6284e7c88c0cf65",
+    "src/server/SessionStore.lua": "9ed88c35ca6e39d7982244623ddc6e95f5e42aa39baf74c7fddce04bf0ff7dbc",
+    "src/server/Stats.lua": "359b0a335f1a8b9da0bb32859ef0897cdd50b41bceb40a8e0c168557c68f1690",
+    "src/shared/ItemDefinitions.lua": "5b1a421648efe2ed4b4bacc05690073440de547ec1c87630d9b413902a7d6368",
+    "src/shared/StatDefinitions.lua": "e058ce287b045d711fd12f1b5c1ad138f068ef99273acd5522b1afd358d6ae75",
+    "src/shared/TableUtil.lua": "0f0f97cf28f6d812c60f2f97fac858c0e8496a5b6837ff858dc96bc4f8c6775b",
+    "tests/run.lua": "d151aa1f19f9ad10fd8016c6294c0966d57c2697683e79f5743ce1439a965e51",
+    "tools/check-build.py": "0dda56586910ec8608e1fff69683672955a645bcd3e596898fd94c47bc1fac63"
+  }
+}

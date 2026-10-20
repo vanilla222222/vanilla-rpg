@@ -1,0 +1,20 @@
+{
+  "name": "VanillaRPG",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {"Shared": {"$path": "src/shared"}},
+    "ServerScriptService": {"Server": {"$path": "src/server"}},
+    "StarterPlayer": {"StarterPlayerScripts": {"Client": {"$path": "src/client"}}},
+    "Workspace": {
+      "$properties": {"FilteringEnabled": true},
+      "Baseplate": {
+        "$className": "Part",
+        "$properties": {"Anchored": true, "Size": [256, 1, 256], "Position": [0, -0.5, 0], "Color": [0.24, 0.34, 0.29]}
+      },
+      "Spawn": {
+        "$className": "SpawnLocation",
+        "$properties": {"Anchored": true, "Size": [6, 1, 6], "Position": [0, 1, 0], "Neutral": true}
+      }
+    }
+  }
+}

@@ -1,0 +1,157 @@
+-- Run from repository root: lua tests/run.lua (Lua 5.3+) or texlua tests/run.lua.
+local Util = dofile('src/shared/TableUtil.lua')
+local ProfileModule = dofile('src/server/Profile.lua')
+local Profile = ProfileModule.create(Util)
+local Stats = dofile('src/server/Stats.lua')
+local Definitions = dofile('src/shared/StatDefinitions.lua')
+local SessionStore = dofile('src/server/SessionStore.lua')
+local PlayerService = dofile('src/server/PlayerService.lua')
+local passed = 0
+local function test(name, fn)
+    local ok, err = pcall(fn)
+    if not ok then error('FAIL ' .. name .. ': ' .. tostring(err)) end
+    passed = passed + 1; print('PASS ' .. name)
+end
+local function rejects(fn) assert(not pcall(fn), 'Expected rejection') end
+local function equal(a, b) assert(a == b, tostring(a) .. ' ~= ' .. tostring(b)) end
+
+test('independent defaults and copy-on-load', function()
+    local a, b = Profile.prepare(nil, 100), Profile.prepare(nil, 100)
+    a.storage.stacks.oak_log = 9; equal(b.storage.stacks.oak_log, nil)
+    local loaded = Profile.prepare(a, 101); loaded.currencies.coins = 20
+    equal(a.currencies.coins, 0)
+end)
+test('reconciliation preserves progress and unknown extension fields', function()
+    local a = {schemaVersion = 1, currencies = {coins = 99}, extension = {flag = true}}
+    local b = Profile.prepare(a, 100); equal(b.currencies.coins, 99); assert(b.extension.flag)
+    equal(b.skills.mining.xp, 0); equal(a.skills, nil)
+end)
+test('corrupt, future and non-finite profiles fail closed', function()
+    for _, raw in ipairs({{schemaVersion = 2}, {schemaVersion = 1, currencies = 'bad'},
+        {schemaVersion = 1, currencies = {coins = -1}}, {schemaVersion = 1, currencies = {coins = 0/0}},
+        {schemaVersion = 1, storage = {stacks = {oak_log = 1.5}}}, {schemaVersion = 1, injected = function() end}}) do
+        rejects(function() Profile.prepare(raw, 100) end)
+    end
+end)
+test('reward and spending validation; no overflow or negative spending', function()
+    local p = Profile.prepare(nil, 100); Profile.addCoins(p, 20)
+    assert(Profile.spendCoins(p, 5)); equal(p.currencies.coins, 15)
+    assert(not Profile.spendCoins(p, 16)); equal(p.currencies.coins, 15)
+    for _, amount in ipairs({-1, 0, 1.5, math.huge, 0/0}) do
+        rejects(function() Profile.addCoins(p, amount) end)
+        rejects(function() Profile.spendCoins(p, amount) end)
+    end
+    p.currencies.coins = ProfileModule.MAX_INTEGER
+    rejects(function() Profile.addCoins(p, 1) end)
+end)
+test('stat ordering, formula, source replacement and defensive copying', function()
+    local stats = Stats.new(Definitions, Util)
+    local change = {Health = {flat = 100, percent = .5, multiplier = 2}}
+    stats.set('gear', change); change.Health.flat = 9999
+    equal(stats.calculate().Health, 600)
+    stats.set('gear', {Health = {flat = 50}}); equal(stats.calculate().Health, 150)
+    stats.set('skill', {Health = {percent = .2}}); equal(stats.calculate().Health, 180)
+    stats.remove('gear'); equal(stats.calculate().Health, 120)
+    local other = Stats.new(Definitions, Util)
+    other.set('skill', {Health = {percent = .2}})
+    equal(stats.calculate().Health, other.calculate().Health)
+end)
+test('stat bounds and invalid operation guards', function()
+    local stats = Stats.new(Definitions, Util)
+    stats.set('test', {CritChance = {flat = 200}, WalkSpeed = {flat = -100}})
+    equal(stats.calculate().CritChance, 100); equal(stats.calculate().WalkSpeed, 0)
+    rejects(function() stats.set('x', {Missing = {flat = 1}}) end)
+    rejects(function() stats.set('x', {Health = {flat = math.huge}}) end)
+    rejects(function() stats.set('x', {Health = {multiplier = -1}}) end)
+    rejects(function() stats.set('x', {Health = {mystery = 1}}) end)
+end)
+local function fixture()
+    local now, records, failures, calls, sleeps = 100, {}, 0, 0, 0
+    local store = {}
+    function store:UpdateAsync(key, callback)
+        calls = calls + 1
+        if failures > 0 then failures = failures - 1; error('Simulated outage') end
+        local info = {GetMetadata = function() return {retained = true} end}
+        -- Repeat the callback, as Roblox can do on write contention.
+        callback(Util.copy(records[key]), info)
+        local nextValue, users, metadata = callback(Util.copy(records[key]), info)
+        if nextValue then records[key] = Util.copy(nextValue); assert(metadata.retained); equal(users[1], 1) end
+        return Util.copy(nextValue)
+    end
+    local persistence = SessionStore.new(store, Profile, Util, {ttl = 600, clock = function() return now end,
+        sleep = function() sleeps = sleeps + 1 end})
+    return persistence, records, function(t) now = t end, function(n) failures = n end,
+        function() return calls, sleeps end
+end
+test('atomic lease excludes a second server, saves and releases', function()
+    local store, records = fixture()
+    local a = store.open(1, 'server-a'); Profile.addCoins(a.data, 25)
+    rejects(function() store.open(1, 'server-b') end)
+    equal(records.player_1.data.currencies.coins, 0)
+    store.save(a, false); equal(records.player_1.data.currencies.coins, 25)
+    store.save(a, true); equal(records.player_1.session, nil)
+    local b = store.open(1, 'server-b'); equal(b.data.currencies.coins, 25)
+    rejects(function() store.save(a, false) end)
+end)
+test('expired lease cannot save or overwrite a new owner', function()
+    local store, records, clock = fixture(); local a = store.open(1, 'a')
+    clock(700); rejects(function() store.save(a, false) end)
+    local b = store.open(1, 'b'); Profile.addCoins(b.data, 10); store.save(b, false)
+    rejects(function() store.save(a, true) end)
+    equal(records.player_1.data.currencies.coins, 10); equal(records.player_1.session.id, 'b')
+end)
+test('corrupt data never becomes a blank overwrite', function()
+    local store, records = fixture()
+    records.player_1 = {formatVersion = 1, data = {schemaVersion = 99, currencies = {coins = 987}}}
+    rejects(function() store.open(1, 'a') end)
+    equal(records.player_1.data.currencies.coins, 987); equal(records.player_1.session, nil)
+    records.player_1 = {formatVersion = 1}
+    rejects(function() store.open(1, 'a') end); equal(records.player_1.data, nil)
+end)
+test('transient failures retry; persistent failures do not create defaults', function()
+    local store, records, _, fail, metrics = fixture(); fail(2)
+    store.open(1, 'a'); local calls, sleeps = metrics(); equal(calls, 3); equal(sleeps, 2)
+    store.save({data = records.player_1.data, token = 'a', userId = 1}, true)
+    fail(3); rejects(function() store.open(1, 'b') end); equal(records.player_1.session, nil)
+end)
+test('idempotent retry retains previously stored data', function()
+    local store = fixture(); local a = store.open(1, 'same-token')
+    Profile.addCoins(a.data, 50); store.save(a, false)
+    equal(store.open(1, 'same-token').data.currencies.coins, 50)
+end)
+test('player snapshots are private copies and exclude profile internals', function()
+    local now, changes = 100, 0
+    local service = PlayerService.new(Profile, Stats, Definitions, Util, function() return now end, function() changes = changes + 1 end)
+    service.attach(1, {data = Profile.prepare(nil, 100), expiresAt = 200})
+    service.grantCoins(1, 10); equal(service.snapshot(1).coins, 10); equal(changes, 1)
+    local snap = service.snapshot(1); snap.skills.mining.xp = 999
+    equal(service.snapshot(1).skills.mining.xp, 0); equal(snap.storage, nil); equal(snap.session, nil)
+    assert(service.spendCoins(1, 5)); assert(not service.spendCoins(1, 6))
+    now = 200; equal(service.snapshot(1), nil)
+    rejects(function() service.grantCoins(1, 1) end)
+end)
+test('modifier changes are transactional and closing blocks mutation', function()
+    local service = PlayerService.new(Profile, Stats, Definitions, Util, function() return 100 end, function() end)
+    local entry = service.attach(1, {data = Profile.prepare(nil, 100), expiresAt = 200})
+    service.setModifier(1, 'gear', {Health = {flat = 100}})
+    equal(service.snapshot(1).stats.Health, 200)
+    rejects(function() service.setModifier(1, 'gear', {Health = {multiplier = math.huge}}) end)
+    equal(service.snapshot(1).stats.Health, 200)
+    service.removeModifier(1, 'gear'); equal(service.snapshot(1).stats.Health, 100)
+    entry.closing = true; rejects(function() service.grantCoins(1, 1) end)
+    service.detach(1); equal(service.get(1), nil)
+end)
+test('removing a modifier cannot commit an overflowing composition', function()
+    local service = PlayerService.new(Profile, Stats, Definitions, Util, function() return 100 end, function() end)
+    service.attach(1, {data = Profile.prepare(nil, 100), expiresAt = 200})
+    service.setModifier(1, 'flat', {Health = {flat = 1e308}})
+    service.setModifier(1, 'cancel', {Health = {percent = -1}})
+    service.setModifier(1, 'multiply', {Health = {multiplier = 1e308}})
+    equal(service.snapshot(1).stats.Health, 1)
+    rejects(function() service.removeModifier(1, 'cancel') end)
+    equal(service.snapshot(1).stats.Health, 1)
+end)
+-- Syntax-check all Roblox scripts even though engine APIs cannot run in this host.
+for _, file in ipairs({'src/server/Bootstrap.server.lua', 'src/server/Config.lua', 'src/client/Bootstrap.client.lua',
+    'src/shared/ItemDefinitions.lua'}) do assert(loadfile(file)) end
+print(string.format('%d foundation tests passed; Roblox engine integration remains unverified.', passed))
