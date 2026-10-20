@@ -7,8 +7,8 @@
   resolve in order, with missing references and circular dependencies rejected.
 - **Dynamic:** current resource values. Session-only, bounded by defined maxima.
 
-All quantities are server-owned. Client snapshots have schema version 2; saved
-profiles remain version 1 because derived/current stats are not persisted.
+All quantities are server-owned. Client snapshots have schema version 3; saved profiles use version 2.
+Derived/current stats are not persisted.
 Farming XP is reconciled into existing profiles without resetting progress.
 
 ## Definitive defaults
@@ -91,9 +91,8 @@ has been invented: a sprint stamina cost remains a future design decision.
 The client requests only a boolean sprint state; the server determines speed.
 This does not constitute comprehensive movement anti-cheat.
 
-Studio-only buttons grant 10 coins or drain 25 from each current resource (health
-stops at 1). Use the latter to check default regeneration takes roughly five
-seconds to restore a 25-point deficit. These remotes do not exist outside Studio.
+The old Studio debug reward/drain buttons and remotes have been removed. Use
+server-side Humanoid damage in Studio to test health regeneration.
 
 ## Verification boundary
 

@@ -1,9 +1,9 @@
 {
-  "checkedAt": "2026-10-20T17:28:40.854973+00:00",
+  "checkedAt": "2026-10-20T17:41:52.408430+00:00",
   "coreTests": {
     "runner": "texlua (portable Lua core, not Roblox/Luau engine)",
-    "passed": 22,
-    "output": "PASS independent defaults and copy-on-load\nPASS reconciliation preserves progress and unknown extension fields\nPASS corrupt, future and non-finite profiles fail closed\nPASS reward and spending validation; no overflow or negative spending\nPASS stat ordering, formula, source replacement and defensive copying\nPASS stat bounds and invalid operation guards\nPASS atomic lease excludes a second server, saves and releases\nPASS expired lease cannot save or overwrite a new owner\nPASS corrupt data never becomes a blank overwrite\nPASS transient failures retry; persistent failures do not create defaults\nPASS idempotent retry retains previously stored data\nPASS player snapshots are private copies and exclude profile internals\nPASS modifier changes are transactional and closing blocks mutation\nPASS removing a modifier cannot commit an overflowing composition\nPASS all definitive defaults and formula-only maxima match the design\nPASS defined dependency chains, missing references and cycles\nPASS wisdom and chance stat clamps; total crit and ability multipliers\nPASS fortune guaranteed counts, remainder boundaries and effective cap\nPASS mining spread is total blocks with no recursive or extra base block\nPASS resources regenerate by elapsed seconds and clamp without free healing\nPASS resource updates are independent of frame partition and cannot regenerate the dead\nPASS player modifiers clamp current resources; expired sessions cannot progress\n22 foundation tests passed; Roblox engine integration remains unverified.\n"
+    "passed": 28,
+    "output": "PASS independent defaults and copy-on-load\nPASS reconciliation preserves progress and unknown extension fields\nPASS corrupt, future and non-finite profiles fail closed\nPASS reward and spending validation; no overflow or negative spending\nPASS stat ordering, formula, source replacement and defensive copying\nPASS stat bounds and invalid operation guards\nPASS atomic lease excludes a second server, saves and releases\nPASS expired lease cannot save or overwrite a new owner\nPASS corrupt data never becomes a blank overwrite\nPASS transient failures retry; persistent failures do not create defaults\nPASS idempotent retry retains previously stored data\nPASS player snapshots are private copies and exclude profile internals\nPASS modifier changes are transactional and closing blocks mutation\nPASS removing a modifier cannot commit an overflowing composition\nPASS all definitive defaults and formula-only maxima match the design\nPASS defined dependency chains, missing references and cycles\nPASS wisdom and chance stat clamps; total crit and ability multipliers\nPASS fortune guaranteed counts, remainder boundaries and effective cap\nPASS mining spread is total blocks with no recursive or extra base block\nPASS resources regenerate by elapsed seconds and clamp without free healing\nPASS resource updates are independent of frame partition and cannot regenerate the dead\nPASS player modifiers clamp current resources; expired sessions cannot progress\nPASS v2 template contains requested maps, skill levels and all equipment slots\nPASS legacy migration archives unsplittable combat XP and preserves coins\nPASS missing fields repair without deleting donations, quests, equipment or balances\nPASS joining immediately persists new template and migrated repairs\nPASS canonical balances take precedence over deprecated aliases without adding coins\nPASS private snapshot computes game level from exact integer XP\n28 foundation tests passed; Roblox engine integration remains unverified.\n"
   },
   "placeBuild": {
     "tool": "Rojo 7.7.1",
@@ -11,19 +11,18 @@
     "sourceMapping": "Rojo mapping passed: 13 scripts match source; persistence stays server-only; spawn exists."
   },
   "unverified": [
-    "Updated Roblox Studio/Vinegar play test",
-    "Real DataStore persistence and throttling",
-    "Humanoid event timing, default regen override, respawn, sprint controls and HUD integration"
+    "New Inventory/Stats windows and compact HUD visual/play test in Roblox Studio",
+    "Real DataStore round trips, throttling and engine save lifecycle"
   ],
   "sourceSha256": {
     "default.project.json": "b08f44f9719ef4e768a80eb1d8eb1912f34c87a54fe31a32f1ae3d22030b1205",
     "rokit.toml": "615025a4372c38deb6b977cb8defebab3acd1b55e8fc1424c105462cadf2df35",
     "src/character/Health.server.lua": "1ea607fadfc944b7a1ac2d655b899c1d77c070c9fac006c141a6ab27338ac5e7",
-    "src/client/Bootstrap.client.lua": "3a871347254a6f315e0f52e63876f7d0005da07f987aa4e927b9e7049e806444",
-    "src/server/Bootstrap.server.lua": "254b307a7f0c6e6192d484722ffb0073792003c23fb7cdb7b74b3bbbc6798d37",
+    "src/client/Bootstrap.client.lua": "019bb733beac7454ad9959e751b83c454c58bbb665ae9ecf2814dec6a6f8b700",
+    "src/server/Bootstrap.server.lua": "9e14ddb77420e1875a83e1cb17d7a143ad62396ebb891ea2326d29ed0e8e45cb",
     "src/server/Config.lua": "8e75fcbe5282c22e80af801483cbfddecaa62b65de5117edcf15d85dbba06f4f",
-    "src/server/PlayerService.lua": "7f1d9ca9bd3a60fe471e190c83fc90def9d43e36776b6080399f617a1638c5d1",
-    "src/server/Profile.lua": "5135b904db329639687c2da8fbeab63faa3a63017f516458063f72e712c8dee7",
+    "src/server/PlayerService.lua": "65573904e79434ff98baa35ffff09d87f98e8201e63fd8f4a60b9608ac729593",
+    "src/server/Profile.lua": "523ba77d13a2ab3e392521086f2d40d4af81a3596d5755087098e6ca8b8bcda8",
     "src/server/Resources.lua": "faf3b2d0815f8100381b178bf808c13abe38ed8b58d87c5bb15186832bf5b10d",
     "src/server/SessionStore.lua": "9ed88c35ca6e39d7982244623ddc6e95f5e42aa39baf74c7fddce04bf0ff7dbc",
     "src/server/Stats.lua": "a648abf757d071b3a8e2659d7621f625d7d108a0cc2dab7d1bbab0a2d0a1c470",
@@ -31,7 +30,7 @@
     "src/shared/StatDefinitions.lua": "daf4f7eb2bf90d2c0e954c0391b0020e9c999065406d33dd8904e6cd66b20844",
     "src/shared/StatRules.lua": "ec79a4efac9131224f17350df72e1210c62fc6cd8ba6bf06dbe48c2ca81cb3b8",
     "src/shared/TableUtil.lua": "0f0f97cf28f6d812c60f2f97fac858c0e8496a5b6837ff858dc96bc4f8c6775b",
-    "tests/run.lua": "06082cc3ce73cb5ea3c7469ecbf770024f761e2b20a478f3fcdea12e000d4198",
+    "tests/run.lua": "f19ef3418c281646a1438bf145eb6e55b53465efe6f107557ad2a145ca0b00f6",
     "tools/check-build.py": "5cadec8e7a6c86d9bbaa41ca9cae3bf6971b958c4daba4099ce52dada28f2cdf"
   }
 }

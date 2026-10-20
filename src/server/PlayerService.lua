@@ -19,7 +19,9 @@ function PlayerService.new(profile, Stats, definitions, util, clock, changed, Re
     function api.snapshot(userId)
         if not api.active(userId) then return nil end
         local entry = entries[userId]
-        return {schemaVersion = 2, coins = entry.session.data.currencies.coins,
+        return {schemaVersion = 3, coins = entry.session.data.coins, bank = entry.session.data.bank,
+            gameXP = entry.session.data.gameXP, gameLevel = 1 + entry.session.data.gameXP / 100,
+            inventory = util.copy(entry.session.data.inventory), equipment = util.copy(entry.session.data.equipment),
             skills = util.copy(entry.session.data.skills), stats = util.copy(entry.values), resources = entry.resources.snapshot(), sprinting = entry.sprinting or false}
     end
     function api.grantCoins(userId, amount)

@@ -2,94 +2,153 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local definitions = require(ReplicatedStorage:WaitForChild("Shared").StatDefinitions)
+local items = require(ReplicatedStorage.Shared.ItemDefinitions)
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("RPGRemotes")
-local gui = Instance.new("ScreenGui")
-gui.Name, gui.ResetOnSpawn = "FoundationHUD", false
-local frame = Instance.new("Frame")
-frame.Size, frame.Position = UDim2.new(0.92, 0, 0.88, 0), UDim2.new(0.04, 0, 0.06, 0)
-frame.BackgroundColor3, frame.Parent = Color3.fromRGB(22, 28, 35), gui
-local constraint = Instance.new("UISizeConstraint")
-constraint.MaxSize, constraint.Parent = Vector2.new(460, 760), frame
-local padding = Instance.new("UIPadding")
-padding.PaddingLeft, padding.PaddingRight = UDim.new(0, 16), UDim.new(0, 16)
-padding.PaddingTop, padding.PaddingBottom, padding.Parent = UDim.new(0, 16), UDim.new(0, 16), frame
-local label = Instance.new("TextLabel")
-label.Size, label.BackgroundTransparency = UDim2.new(1, 0, 0, 80), 1
-label.Font, label.TextSize = Enum.Font.Gotham, 16
-label.TextColor3, label.TextWrapped = Color3.fromRGB(235, 241, 247), true
-label.TextXAlignment, label.TextYAlignment = Enum.TextXAlignment.Left, Enum.TextYAlignment.Top
-label.Text, label.Parent = "VANILLA RPG\nLoading your profile…", frame
-local resources = label:Clone()
-resources.Position, resources.Size, resources.Text, resources.Parent = UDim2.new(0, 0, 0, 88), UDim2.new(1, 0, 0, 88), "", frame
-local scroll = Instance.new("ScrollingFrame")
-scroll.Position, scroll.Size = UDim2.new(0, 0, 0, 184), UDim2.new(1, 0, 1, -324)
-scroll.BackgroundTransparency, scroll.BorderSizePixel = 1, 0
-scroll.AutomaticCanvasSize, scroll.CanvasSize = Enum.AutomaticSize.Y, UDim2.new()
-scroll.ScrollBarThickness, scroll.Parent = 6, frame
-local statsLabel = label:Clone()
-statsLabel.Text, statsLabel.Size = "", UDim2.new(1, -8, 0, 0)
-statsLabel.AutomaticSize, statsLabel.Parent = Enum.AutomaticSize.Y, scroll
-local function button(text, offset)
-    local b = Instance.new("TextButton")
-    b.Position, b.Size = UDim2.new(0, 0, 1, offset), UDim2.new(1, 0, 0, 40)
-    b.Text, b.TextSize, b.Font = text, 15, Enum.Font.GothamBold
-    b.BackgroundColor3, b.TextColor3 = Color3.fromRGB(63, 117, 96), Color3.new(1, 1, 1)
-    b.Parent = frame
-    return b
+local color = {panel=Color3.fromRGB(19,27,39), card=Color3.fromRGB(29,40,55), line=Color3.fromRGB(58,76,97),
+    text=Color3.fromRGB(234,241,249), muted=Color3.fromRGB(153,173,195), accent=Color3.fromRGB(92,220,190)}
+local function make(kind, properties, parent)
+    local object = Instance.new(kind)
+    for key,value in pairs(properties) do object[key]=value end
+    object.Parent=parent;return object
 end
-local sprintButton = button("Sprint: OFF · Shift or tap", -132)
-local drainButton = button("Studio test: drain 25 health / stamina / mana", -88)
-local rewardButton = button("Studio test: +10 coins", -44)
-drainButton.Visible, rewardButton.Visible = false, false
-local sprinting = false
-local function sprint(value) sprinting = value; remotes.SetSprinting:FireServer(value) end
-sprintButton.Activated:Connect(function() sprint(not sprinting) end)
-UserInputService.InputBegan:Connect(function(input, processed)
-    if not processed and (input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift) then sprint(true) end
+local function round(object,radius)
+    make("UICorner",{CornerRadius=UDim.new(0,radius or 10)},object)
+end
+local function text(parent,value,size,position,fontSize,tint)
+    return make("TextLabel",{Text=value,Size=size,Position=position,BackgroundTransparency=1,
+        Font=Enum.Font.Gotham,TextSize=fontSize or 14,TextColor3=tint or color.text,
+        TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Center},parent)
+end
+local function button(parent,value,size,position)
+    local b=make("TextButton",{Text=value,Size=size,Position=position,BackgroundColor3=color.card,
+        TextColor3=color.text,Font=Enum.Font.GothamBold,TextSize=14,AutoButtonColor=true},parent)
+    round(b,8);return b
+end
+local function pretty(id)return id:gsub("(%l)(%u)","%1 %2"):gsub("^%l",string.upper)end
+local function number(value)return string.format("%.2f",value):gsub("%.?0+$","")end
+local gui=make("ScreenGui",{Name="VanillaHUD",ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},player:WaitForChild("PlayerGui"))
+local hud=make("Frame",{Name="Resources",AnchorPoint=Vector2.new(0,1),Position=UDim2.new(0,18,1,-18),
+    Size=UDim2.new(0.9,0,0,178),BackgroundColor3=color.panel,BackgroundTransparency=.06},gui)
+make("UISizeConstraint",{MaxSize=Vector2.new(340,178)},hud);round(hud,12)
+make("UIStroke",{Color=color.line,Transparency=.35},hud)
+local level=text(hud,"VANILLA RPG  /  LEVEL 1.00",UDim2.new(1,-28,0,24),UDim2.fromOffset(14,8),12,color.accent)
+level.Font=Enum.Font.GothamBold
+local wallet=text(hud,"Loading profile…",UDim2.new(1,-28,0,20),UDim2.fromOffset(14,31),12,color.muted)
+local bars={}
+for i,entry in ipairs({{"Health",Color3.fromRGB(235,104,120)},{"Stamina",Color3.fromRGB(231,192,95)},{"Mana",Color3.fromRGB(104,166,244)}})do
+    local id,tint=entry[1],entry[2]
+    local track=make("Frame",{Position=UDim2.new(0,14,0,55+(i-1)*29),Size=UDim2.new(1,-28,0,23),BackgroundColor3=color.card,ClipsDescendants=true},hud);round(track,6)
+    local fill=make("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=tint,BackgroundTransparency=.63,BorderSizePixel=0},track);round(fill,6)
+    local label=text(track,id.." —",UDim2.new(1,-16,1,0),UDim2.fromOffset(8,0),12)
+    bars[id]={fill=fill,label=label}
+end
+local defense=text(hud,"DEFENSE  0",UDim2.new(.58,-14,0,22),UDim2.fromOffset(14,148),11,color.muted)
+local sprint=button(hud,"SPRINT OFF",UDim2.new(.42,-14,0,22),UDim2.new(.58,0,0,148));sprint.TextSize=10
+local inventoryButton=button(hud,"Inventory  [I]",UDim2.new(.5,-5,0,36),UDim2.new(0,0,0,-46))
+local statsButton=button(hud,"Stats  [C]",UDim2.new(.5,-5,0,36),UDim2.new(.5,5,0,-46))
+local shade=make("TextButton",{Name="Backdrop",Text="",Visible=false,Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.4,AutoButtonColor=false,ZIndex=5},gui)
+local windows={}
+local function window(id,title,subtitle)
+    local panel=make("Frame",{Name=id,Visible=false,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.46),Size=UDim2.fromScale(.92,.78),BackgroundColor3=color.panel,ZIndex=6},gui)
+    make("UISizeConstraint",{MaxSize=Vector2.new(800,650)},panel);round(panel,14)
+    make("UIStroke",{Color=color.line},panel)
+    local heading=text(panel,title,UDim2.new(1,-86,0,30),UDim2.fromOffset(20,14),22);heading.Font=Enum.Font.GothamBold
+    text(panel,subtitle,UDim2.new(1,-40,0,24),UDim2.fromOffset(20,46),12,color.muted)
+    local close=button(panel,"×",UDim2.fromOffset(34,34),UDim2.new(1,-48,0,14));close.TextSize=24
+    local content=make("ScrollingFrame",{Position=UDim2.fromOffset(20,82),Size=UDim2.new(1,-40,1,-102),BackgroundTransparency=1,BorderSizePixel=0,CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarThickness=4,ScrollBarImageColor3=color.accent},panel)
+    make("UIListLayout",{Padding=UDim.new(0,8),SortOrder=Enum.SortOrder.LayoutOrder},content)
+    windows[id]={panel=panel,content=content}
+    close.Activated:Connect(function()panel.Visible=false;shade.Visible=false end)
+    return content
+end
+local inventoryContent=window("Inventory","INVENTORY","Saved items & equipment · item management is coming next")
+local statsContent=window("Stats","PLAYER STATS","Definitive sources → defined values → dynamic resources")
+local function show(id)
+    local opening=not windows[id].panel.Visible
+    for _,w in pairs(windows)do w.panel.Visible=false end
+    windows[id].panel.Visible=opening;shade.Visible=opening
+end
+shade.Activated:Connect(function()for _,w in pairs(windows)do w.panel.Visible=false end;shade.Visible=false end)
+inventoryButton.Activated:Connect(function()show("Inventory")end)
+statsButton.Activated:Connect(function()show("Stats")end)
+local function row(parent,left,right,order,tint)
+    local card=make("Frame",{LayoutOrder=order,Size=UDim2.new(1,-8,0,36),BackgroundColor3=color.card},parent);round(card,7)
+    text(card,left,UDim2.new(.64,-20,1,0),UDim2.fromOffset(12,0),13,tint)
+    local value=text(card,right,UDim2.new(.36,-16,1,0),UDim2.new(.64,0,0,0),13,color.muted);value.TextXAlignment=Enum.TextXAlignment.Right
+    return value
+end
+local function section(parent,title,order)
+    local label=text(parent,title,UDim2.new(1,-8,0,28),UDim2.new(),12,color.accent)
+    label.LayoutOrder=order;label.Font=Enum.Font.GothamBold
+end
+local statLabels={};local order=0
+for _,group in ipairs({"definitive","defined","dynamic"})do
+    order=order+1;section(statsContent,string.upper(group).." STATS",order)
+    local keys={};for id in pairs(definitions[group])do table.insert(keys,id)end;table.sort(keys)
+    for _,id in ipairs(keys)do order=order+1;statLabels[id]=row(statsContent,pretty(id),"—",order)end
+end
+local function clearRows(parent)
+    for _,child in ipairs(parent:GetChildren())do if child:IsA("GuiObject")then child:Destroy()end end
+end
+local inventoryKey
+local function renderInventory(data)
+    -- Inventory changes rarely; do not rebuild it for every resource regeneration tick.
+    local key=game:GetService("HttpService"):JSONEncode({data.inventory,data.equipment})
+    if inventoryKey==key then return end;inventoryKey=key
+    clearRows(inventoryContent)
+    section(inventoryContent,"BAG · "..data.inventory.capacity.." SLOTS",1)
+    local n=1;local occupied=0
+    local bagSlots={};for slot in pairs(data.inventory.slots)do table.insert(bagSlots,slot)end
+    table.sort(bagSlots,function(a,b)
+        local x,y=tonumber(a),tonumber(b)
+        if x and y and x~=y then return x<y end
+        return a<b
+    end)
+    for _,slot in ipairs(bagSlots)do
+        local item=data.inventory.slots[slot]
+        occupied=occupied+1;n=n+1
+        local id=type(item)=="table" and (item.itemId or item.id) or item
+        local name=type(id)=="string" and items[id] and items[id].name or tostring(id or "Unknown item")
+        row(inventoryContent,"Slot "..slot.." · "..name,type(item)=="table" and ("×"..tostring(item.quantity or 1)) or "×1",n)
+    end
+    if occupied==0 then n=n+1;row(inventoryContent,"Your bag is empty","0 / "..data.inventory.capacity,n)end
+    n=n+1;section(inventoryContent,"EQUIPMENT",n)
+    local slots={};for slot in pairs(data.equipment)do table.insert(slots,slot)end;table.sort(slots)
+    for _,slot in ipairs(slots)do
+        n=n+1;local item=data.equipment[slot]
+        row(inventoryContent,pretty(slot),item and (items[item] and items[item].name or tostring(item)) or "Empty",n)
+    end
+end
+local sprinting=false
+local function setSprint(enabled)sprinting=enabled;remotes.SetSprinting:FireServer(enabled)end
+sprint.Activated:Connect(function()setSprint(not sprinting)end)
+UserInputService.InputBegan:Connect(function(input,processed)
+    if processed then return end
+    if input.KeyCode==Enum.KeyCode.I then show("Inventory")
+    elseif input.KeyCode==Enum.KeyCode.C then show("Stats")
+    elseif input.KeyCode==Enum.KeyCode.LeftShift or input.KeyCode==Enum.KeyCode.RightShift then setSprint(true)
+    elseif input.KeyCode==Enum.KeyCode.Escape then for _,w in pairs(windows)do w.panel.Visible=false end;shade.Visible=false end
 end)
 UserInputService.InputEnded:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then sprint(false) end
+    if input.KeyCode==Enum.KeyCode.LeftShift or input.KeyCode==Enum.KeyCode.RightShift then setSprint(false)end
 end)
-UserInputService.WindowFocusReleased:Connect(function() sprint(false) end)
-rewardButton.Activated:Connect(function()
-    local remote = remotes:FindFirstChild("StudioGrantCoins")
-    if remote then remote:FireServer() end
-end)
-drainButton.Activated:Connect(function()
-    local remote = remotes:FindFirstChild("StudioDrainResources")
-    if remote then remote:FireServer() end
-end)
-local function number(value) return string.format("%.2f", value):gsub("%.?0+$", "") end
-local function heading(id) return id:gsub("(%l)(%u)", "%1 %2") end
+UserInputService.WindowFocusReleased:Connect(function()setSprint(false)end)
 remotes.Snapshot.OnClientEvent:Connect(function(data)
-    label.Text = "VANILLA RPG · FOUNDATION\nCoins: " .. tostring(data.coins) .. "\n" .. data.persistence
-    local resourceLines = {"DYNAMIC RESOURCES"}
-    for _, id in ipairs({"Health", "Stamina", "Mana"}) do
-        table.insert(resourceLines, id .. ": " .. number(data.resources[id]) .. " / " .. number(data.stats[definitions.dynamic[id].maximum]))
+    level.Text="VANILLA RPG  /  LEVEL "..string.format("%.2f",data.gameLevel)
+    wallet.Text="Coins "..number(data.coins).."   ·   Bank "..number(data.bank)..(data.temporary and "   ·   TEST DATA" or "")
+    defense.Text="DEFENSE  "..number(data.stats.Defense)
+    for id,bar in pairs(bars)do
+        local current,maximum=data.resources[id],data.stats[definitions.dynamic[id].maximum]
+        bar.label.Text=string.upper(id).."   "..number(current).." / "..number(maximum)
+        bar.fill.Size=UDim2.fromScale(maximum>0 and math.clamp(current/maximum,0,1) or 0,1)
     end
-    resources.Text = table.concat(resourceLines, "\n")
-    local lines = {}
-    for _, group in ipairs({"definitive", "defined"}) do
-        table.insert(lines, string.upper(group) .. " STATS")
-        local keys = {}
-        for key in pairs(definitions[group]) do table.insert(keys, key) end
-        table.sort(keys)
-        for _, key in ipairs(keys) do
-            local unit = definitions[group][key].unit
-            table.insert(lines, heading(key) .. ": " .. number(data.stats[key]) .. (unit and (" " .. unit) or ""))
-        end
-        table.insert(lines, "")
+    for id,label in pairs(statLabels)do
+        local definition=definitions.dynamic[id]
+        if definition then label.Text=number(data.resources[id]).." / "..number(data.stats[definition.maximum])
+        else label.Text=number(data.stats[id])..(definitions.definitive[id] and (" "..definitions.definitive[id].unit) or "")end
     end
-    table.insert(lines, "SKILLS · TOTAL XP")
-    local skills = {}
-    for key in pairs(data.skills) do table.insert(skills, key) end
-    table.sort(skills)
-    for _, key in ipairs(skills) do table.insert(lines, key .. ": " .. data.skills[key].xp) end
-    statsLabel.Text = table.concat(lines, "\n")
-    sprinting = data.sprinting
-    sprintButton.Text = "Sprint: " .. (sprinting and "ON" or "OFF") .. " · Shift or tap"
-    drainButton.Visible, rewardButton.Visible = data.studio, data.studio
+    sprinting=data.sprinting;sprint.Text=sprinting and "SPRINT ON" or "SPRINT OFF"
+    renderInventory(data)
 end)
-gui.Parent = player:WaitForChild("PlayerGui")
 remotes.RequestSnapshot:FireServer()

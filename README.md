@@ -18,9 +18,8 @@ rojo serve
 
 Keep the terminal running. In Studio, open `build/vanilla-rpg.rbxlx`, open the
 Rojo plugin and connect to `localhost:34872`. Press **Play**. Expect a baseplate,
-player stats and a **Studio test: +10 coins** button. Open Studio's Output window
-when reporting errors. The button has a one-second server cooldown; rewards are
-fixed by the server. It is absent in published servers.
+a bottom-left resource HUD and **Inventory / Stats** buttons. Open Studio's Output
+window when reporting errors. Press I for Inventory or C for Stats.
 
 Studio defaults to **temporary in-memory data**: no API access is required and
 stopping the Studio server clears it. This mode is labelled on screen.
@@ -43,10 +42,10 @@ Engine behavior and real DataStore requests have not been verified in this envir
 
 ## Implemented foundation
 
-- Versioned profiles, missing-field reconciliation, safe integer currencies,
-  reserved inventory/equipment/skill/collection/storage/unlock sections.
-- Fail-closed unsupported-version handling. Explicit migration hooks must be
-  added when a future schema is introduced; no historical migrations exist yet.
+- Version 2 profiles, version 1 migration, missing-field reconciliation and safe
+  integer balances. See [the player-data contract](docs/PLAYER-DATA.md) for all fields.
+- Fail-closed unsupported-version handling and explicit deprecated-field migration.
+  Legacy combat XP is archived without duplicating it into four new skill tracks.
 - Atomic UpdateAsync session lease; 60-second autosaves, three request attempts,
   ownership checks, expiration watchdog, leave/shutdown saves and late-load release.
 - Definitive stats, formula-only defined stats and dynamic health/stamina/mana.
@@ -54,8 +53,8 @@ Engine behavior and real DataStore requests have not been verified in this envir
 - Deterministic source-keyed modifiers:
   `(base + sum(flat)) × (1 + sum(percent)) × product(multiplier)`, then clamps.
 - Server-only PlayerService APIs for coins and modifiers. Derived stats and current resources are not saved.
-- Private client snapshots, rate-limited snapshot requests and Studio-only rewards.
-- Categorized HUD, resource meters, Shift/touch sprint toggle and Studio resource-drain test button.
+- Private client snapshots, rate-limited snapshot requests and validated sprint controls.
+- Read-only Inventory window, complete Stats window and compact bottom-left resource HUD.
 - Initial test baseplate. Unspecified numeric ceilings remain provisional balance.
 
 ## Source layout

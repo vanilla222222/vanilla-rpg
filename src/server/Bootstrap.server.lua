@@ -33,17 +33,9 @@ local requestEvent = Instance.new("RemoteEvent")
 requestEvent.Name, requestEvent.Parent = "RequestSnapshot", remotes
 local sprintEvent = Instance.new("RemoteEvent")
 sprintEvent.Name, sprintEvent.Parent = "SetSprinting", remotes
-local drainEvent
-local testEvent
-if RunService:IsStudio() then
-    drainEvent = Instance.new("RemoteEvent")
-    drainEvent.Name, drainEvent.Parent = "StudioDrainResources", remotes
-    testEvent = Instance.new("RemoteEvent")
-    testEvent.Name, testEvent.Parent = "StudioGrantCoins", remotes
-end
 remotes.Parent = ReplicatedStorage -- Publish only once all endpoints exist.
 local closing, loading, saving = false, 0, 0
-local requestTimes, rewardTimes, sprintTimes, drainTimes = {}, {}, {}, {}
+local requestTimes, sprintTimes = {}, {}
 local healthConnections, writingHealth = {}, {}
 local service
 local function publish(userId, reason)
@@ -57,6 +49,7 @@ local function publish(userId, reason)
     local snapshot = service.snapshot(userId)
     snapshot.persistence = temporary and "Temporary Studio session — resets when the server stops" or "DataStore persistence enabled"
     snapshot.studio = RunService:IsStudio()
+    snapshot.temporary = temporary
     if humanoid then
         writingHealth[userId] = true
         humanoid.MaxHealth = snapshot.stats.MaxHealth
@@ -117,14 +110,6 @@ requestEvent.OnServerEvent:Connect(function(player)
     requestTimes[player] = now
     publish(player.UserId)
 end)
-if testEvent then
-    testEvent.OnServerEvent:Connect(function(player)
-        local now = os.clock()
-        if not service.active(player.UserId) or now - (rewardTimes[player] or -math.huge) < 1 then return end
-        rewardTimes[player] = now
-        service.grantCoins(player.UserId, 10) -- Amount fixed on server, arguments ignored.
-    end)
-end
 local function bindCharacter(player, character)
     local userId = player.UserId
     if healthConnections[userId] then healthConnections[userId]:Disconnect(); healthConnections[userId] = nil end
@@ -145,20 +130,6 @@ sprintEvent.OnServerEvent:Connect(function(player, enabled)
     sprintTimes[player] = now
     service.setSprinting(player.UserId, enabled)
 end)
-if drainEvent then
-    drainEvent.OnServerEvent:Connect(function(player)
-        local now = os.clock()
-        if not service.active(player.UserId) or now - (drainTimes[player] or -math.huge) < 1 then return end
-        drainTimes[player] = now
-        local snapshot = service.snapshot(player.UserId)
-        if snapshot.resources.Health <= 0 then return end
-        service.setResource(player.UserId, "Health", math.max(1, snapshot.resources.Health - 25))
-        for _, id in ipairs({"Mana", "Stamina"}) do
-            local cost = math.min(25, snapshot.resources[id])
-            if cost > 0 then service.consumeResource(player.UserId, id, cost) end
-        end
-    end)
-end
 local elapsed = 0
 RunService.Heartbeat:Connect(function(dt)
     if closing then return end
@@ -180,7 +151,7 @@ local function connectPlayer(player)
 end
 Players.PlayerAdded:Connect(connectPlayer)
 Players.PlayerRemoving:Connect(function(player)
-    requestTimes[player], rewardTimes[player], sprintTimes[player], drainTimes[player] = nil, nil, nil, nil
+    requestTimes[player], sprintTimes[player] = nil, nil
     if healthConnections[player.UserId] then healthConnections[player.UserId]:Disconnect(); healthConnections[player.UserId] = nil end
     writingHealth[player.UserId] = nil
     save(player, true)
