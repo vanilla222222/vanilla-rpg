@@ -2,16 +2,16 @@
 
 ## Controls
 
-Open Inventory, select a bag item, then press **Equip selected item**. Tools,
-armor and accessories choose their matching slot automatically. Weapons choose
-the first empty weapon slot, or swap weapon1 when all four are occupied. To choose
-an explicit weapon slot, select the bag item, then the target equipment square,
-then Equip. Select an equipment square and press **Unequip selected slot** to
-return its item to the first free bag slot.
+Open Inventory and **click an owned gear item to equip it**. Click an occupied
+equipment square to unequip it. No footer buttons are needed. Tools, armor and accessories choose their matching slot;
+weapons choose the first empty weapon slot or swap weapon1 when all four are full.
+Mouse hover and gamepad
+selection show a separate name/description/rarity/stat card that follows the pointer
+and stays inside the screen. Closing Inventory hides the card.
 
 A swap returns the old item to the selected bag slot; it works even when the bag
 is full. Unequipping into a full bag is refused without changing either item.
-Crafting remains a placeholder. No movement, crafting or tool/combat actions
+Crafting remains a placeholder. No crafting or tool/combat actions
 are implied by equipping an item.
 
 ## Ownership and persistence
@@ -51,15 +51,21 @@ inspection; it is not summed into a new global stat or used to attack anything.
 | Starter Hoe | FarmingFortune +5 (100 → 105) |
 | Starter Fishing Rod | MinSize +1; MaxSize +5 |
 
-`ItemIcons.lua` draws five distinct stylized icons from local GUI geometry.
+`ItemIcons.lua` draws five distinct stylized icons from layered local GUI geometry:
+wood grain, leather wraps, bevelled metal, rivets, brass fittings and highlights.
+Slots use rarity-tinted fills and stronger borders, not just colored names.
 No image assets, uploads or external asset permissions are needed. Other items
 keep name-based slot labels until icons are added. Inspecting an item shows its
 rarity, properties and stat modifiers.
 
 ## Verification
 
-48 portable Lua tests cover equipment stat application/removal, reconstruction,
+50 portable Lua tests cover equipment stat application/removal, reconstruction,
 transactional swaps, invalid/replayed requests, reserved sources, duplicate/broken
 references, requirements, full bags and a fake-store save/reload round trip.
-Rojo builds and embeds all 19 scripts. Icon appearance, selection controls and
+A real InventoryUI controller test drives clicks/hover through GUI adapters and
+server equipment logic, including applying/removing bonuses. This is not a real
+Roblox renderer or hit-test. Server request limiting now accepts a short burst
+and returns an explicit message instead of silently discarding rapid actions.
+Rojo builds and embeds all 21 scripts. Icon appearance, selection controls and
 live Humanoid/stat updates still require Roblox Studio testing.

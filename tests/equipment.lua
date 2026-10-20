@@ -124,5 +124,5 @@ return function(test,equal,rejects)
         for id,modifier in pairs(Equipment.modifiers(second.data))do calc.set(id,modifier)end
         equal(calc.calculate().Sweep,1)
     end)
-    for _,file in ipairs({'src/client/ItemIcons.lua','src/client/InventoryUI.lua'})do assert(loadfile(file))end
+    for _,file in ipairs({'src/client/ItemIcons.lua','src/client/InventoryUI.lua','src/client/ItemTooltip.lua'})do assert(loadfile(file))end
 end

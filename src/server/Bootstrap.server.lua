@@ -148,12 +148,16 @@ equipmentEvent.OnServerEvent:Connect(function(player,action,slot,target)
     if not service.active(player.UserId) or (action~="equip" and action~="unequip") then return end
     if type(slot)~="string" or #slot>32 or (target~=nil and (type(target)~="string" or #target>32))then return end
     local now=os.clock()
-    if now-(equipmentTimes[player] or -math.huge)<.15 then return end
-    equipmentTimes[player]=now
+    local bucket=equipmentTimes[player] or {tokens=8,updated=now}
+    bucket.tokens=math.min(8,bucket.tokens+math.max(0,now-bucket.updated)*6)
+    bucket.updated=now;equipmentTimes[player]=bucket
+    if bucket.tokens<1 then equipmentResult:FireClient(player,false,"Please wait a moment before changing equipment again.");return end
+    bucket.tokens=bucket.tokens-1
     local ok,problem=pcall(service.changeEquipment,player.UserId,action,slot,target)
     local message="Equipment updated"
     if not ok then
         local raw=tostring(problem)
+        warn("Equipment request failed for "..player.UserId.." ("..action..", "..slot.."): "..raw)
         if raw:find("Inventory is full",1,true)then message="Inventory is full. Make room before unequipping."
         elseif raw:find("requirement not met",1,true)then message="You do not meet this item's requirements."
         elseif raw:find("does not fit",1,true)then message="That item does not fit this equipment slot."

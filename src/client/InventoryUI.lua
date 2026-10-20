@@ -4,13 +4,13 @@ function InventoryUI.mount(content, make, text, round, color, items, itemTypes, 
     for _,child in ipairs(content:GetChildren()) do child:Destroy() end
     content.AutomaticCanvasSize=Enum.AutomaticSize.None
     content.ScrollingDirection=Enum.ScrollingDirection.XY
-    local root=make("Frame",{Name="InventoryLayout",Size=UDim2.fromOffset(1000,516),BackgroundTransparency=1},content)
+    local root=make("Frame",{Name="InventoryLayout",Size=UDim2.fromOffset(1000,474),BackgroundTransparency=1},content)
     local scale=make("UIScale",{Scale=1},root)
     local function resize()
         local factor=math.clamp(content.AbsoluteSize.X/1000,.7,1)
         scale.Scale=factor
         root.Position=UDim2.fromOffset(math.max(0,(content.AbsoluteSize.X-1000*factor)/2),0)
-        content.CanvasSize=UDim2.fromOffset(1000*factor,516*factor)
+        content.CanvasSize=UDim2.fromOffset(1000*factor,474*factor)
     end
     content:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize);resize()
     local function panel(name,x,width)
@@ -23,28 +23,15 @@ function InventoryUI.mount(content, make, text, round, color, items, itemTypes, 
     local crafting=panel("Crafting",0,210)
     local bag=panel("Inventory",222,422)
     local equipment=panel("Equipment",656,344)
-    local status=text(root,"Select an item, then Equip. Select an equipment slot to Unequip.",UDim2.fromOffset(984,36),UDim2.fromOffset(8,436),12,color.muted)
+    local status=text(root,"Click an item to equip it. Click equipped gear to unequip. Hover for details.",UDim2.fromOffset(984,36),UDim2.fromOffset(8,436),12,color.muted)
     status.TextWrapped=true
     local selectedBag,selectedEquipment
-    local function actionButton(label,x)
-        local b=make("TextButton",{Text=label,Position=UDim2.fromOffset(x,478),Size=UDim2.fromOffset(196,30),BackgroundColor3=color.card,
-            Font=Enum.Font.GothamBold,TextColor3=color.text,TextSize=12},root);round(b,6);return b
-    end
-    local equipButton=actionButton("Equip selected item",222)
-    local unequipButton=actionButton("Unequip selected slot",428)
-    equipButton.Activated:Connect(function()
-        if selectedBag then remotes.Equipment:FireServer("equip",selectedBag,selectedEquipment)
-        else status.Text="Select an item in your inventory first."end
-    end)
-    unequipButton.Activated:Connect(function()
-        if selectedEquipment then remotes.Equipment:FireServer("unequip",selectedEquipment)
-        else status.Text="Select an equipment slot first."end
-    end)
     remotes.EquipmentResult.OnClientEvent:Connect(function(ok,message)
         status.Text=message
         if ok then selectedBag,selectedEquipment=nil,nil end
     end)
     local Icons=require(script.Parent.ItemIcons)
+    local tooltip=require(script.Parent.ItemTooltip).mount(content,make,text,round,color)
     local function slot(parent,name,x,y,size,caption,selection)
         local b=make("TextButton",{Name=name,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(size,size),Text="",
             BackgroundColor3=color.panel,AutoButtonColor=true},parent)
@@ -54,12 +41,29 @@ function InventoryUI.mount(content, make, text, round, color, items, itemTypes, 
         local quantity=text(b,"",UDim2.new(1,-8,0,14),UDim2.new(0,4,1,-17),10,color.accent)
         quantity.TextXAlignment=Enum.TextXAlignment.Right
         local detail=name.." · Empty"
+        local hoverItem,hoverRarity
+        local function showTooltip()
+            local canEquip=hoverItem and not hoverItem.stackable and hoverItem.kind~="talisman"
+            local action=parent==bag and canEquip and "Click to equip" or parent==equipment and "Click to unequip" or "Inspect item"
+            tooltip.show(b,hoverItem,hoverRarity,action)
+        end
+        b.MouseEnter:Connect(showTooltip)
+        b.MouseLeave:Connect(function()tooltip.hide(b)end)
+        b.SelectionGained:Connect(showTooltip)
+        b.SelectionLost:Connect(function()tooltip.hide(b)end)
         b.Activated:Connect(function()
             status.Text=detail
             if selection then selection()end
+            tooltip.hide(b)
+            if hoverItem and parent==bag and not hoverItem.stackable and hoverItem.kind~="talisman" then
+                remotes.Equipment:FireServer("equip",selectedBag)
+            elseif hoverItem and parent==equipment then
+                remotes.Equipment:FireServer("unequip",selectedEquipment)
+            end
         end)
         local icon
         return function(item,empty)
+            tooltip.hide(b)
             local id=type(item)=="table" and (item.itemId or item.id) or item
             local title=id and (items[id] and items[id].name or tostring(id)) or nil
             if icon then icon:Destroy();icon=nil end
@@ -74,7 +78,12 @@ function InventoryUI.mount(content, make, text, round, color, items, itemTypes, 
             local definition=id and items[id]
             local rarity=definition and itemTypes.rarities[definition.rarity]
             local tint=rarity and Color3.fromRGB(table.unpack(rarity.color)) or color.line
+            hoverItem,hoverRarity=definition,rarity
             border.Color=tint
+            border.Transparency=rarity and 0 or .25
+            border.Thickness=rarity and 2 or 1
+            b.BackgroundColor3=rarity and color.panel:Lerp(tint,.24) or color.panel
+            b:SetAttribute("Rarity",definition and definition.rarity or "empty")
             label.TextColor3=title and (rarity and tint or color.text) or color.muted
             quantity.Text=type(item)=="table" and item.quantity and item.quantity>1 and ("×"..tostring(item.quantity)) or ""
             detail=name.." · "..(title or "Empty")

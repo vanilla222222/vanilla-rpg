@@ -50,3 +50,13 @@ verify the properties listed in EQUIPMENT.md. Unequip to remove bonuses. Repeat
 with persistent test data and rejoin: equipped ownership and bonuses must survive.
 Test a full bag and wrong target slot; no item should disappear or duplicate.
 The sword has a damage property but does not perform attacks yet.
+
+## Hover cards and direct equip
+
+Hover each starter item: inspect name, description, rarity, damage/bonuses in the
+small card. Check it stays on screen near every edge and hides when closing the
+window. Click each bag item directly, then each equipped item directly; verify
+slot movement and bonuses. Check this at a small viewport without accessing footer
+buttons. Verify rapid ordinary clicks are not silently lost. If an operation fails,
+copy the server-side `Equipment request failed` Output message for diagnosis.
+Inspect rarity fills and the revised icons at normal and reduced UI scale.
