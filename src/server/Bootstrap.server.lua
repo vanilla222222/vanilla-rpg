@@ -31,35 +31,43 @@ local snapshotEvent = Instance.new("RemoteEvent")
 snapshotEvent.Name, snapshotEvent.Parent = "Snapshot", remotes
 local requestEvent = Instance.new("RemoteEvent")
 requestEvent.Name, requestEvent.Parent = "RequestSnapshot", remotes
+local sprintEvent = Instance.new("RemoteEvent")
+sprintEvent.Name, sprintEvent.Parent = "SetSprinting", remotes
+local drainEvent
 local testEvent
 if RunService:IsStudio() then
+    drainEvent = Instance.new("RemoteEvent")
+    drainEvent.Name, drainEvent.Parent = "StudioDrainResources", remotes
     testEvent = Instance.new("RemoteEvent")
     testEvent.Name, testEvent.Parent = "StudioGrantCoins", remotes
 end
 remotes.Parent = ReplicatedStorage -- Publish only once all endpoints exist.
 local closing, loading, saving = false, 0, 0
-local requestTimes, rewardTimes = {}, {}
+local requestTimes, rewardTimes, sprintTimes, drainTimes = {}, {}, {}, {}
+local healthConnections, writingHealth = {}, {}
 local service
-local function publish(userId)
+local function publish(userId, reason)
     local player = Players:GetPlayerByUserId(userId)
-    if not player then return end
+    if not player or not service.active(userId) then return end
+    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    -- Preserve damage already applied by the engine, even if its signal is deferred.
+    if humanoid and reason ~= "health" and reason ~= "respawn" then
+        service.setResource(userId, "Health", humanoid.Health, true)
+    end
     local snapshot = service.snapshot(userId)
-    if not snapshot then return end
     snapshot.persistence = temporary and "Temporary Studio session — resets when the server stops" or "DataStore persistence enabled"
     snapshot.studio = RunService:IsStudio()
-    snapshotEvent:FireClient(player, snapshot)
-    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
     if humanoid then
-        local oldMax = humanoid.MaxHealth
-        humanoid.MaxHealth = snapshot.stats.Health
-        humanoid.WalkSpeed = snapshot.stats.WalkSpeed
-        -- Updating modifiers must not heal or revive a character.
-        if humanoid.Health > 0 and oldMax > 0 then
-            humanoid.Health = math.min(humanoid.Health, humanoid.MaxHealth)
-        end
+        writingHealth[userId] = true
+        humanoid.MaxHealth = snapshot.stats.MaxHealth
+        humanoid.WalkSpeed = snapshot.sprinting and snapshot.stats.SprintSpeed or snapshot.stats.Speed
+        if humanoid.Health > 0 then humanoid.Health = snapshot.resources.Health end
+        writingHealth[userId] = nil
     end
+    snapshotEvent:FireClient(player, snapshot)
 end
-service = require(script.Parent.PlayerService).new(Profile, require(script.Parent.Stats), Definitions, Util, os.time, publish)
+service = require(script.Parent.PlayerService).new(Profile, require(script.Parent.Stats), Definitions, Util, os.time, publish, require(script.Parent.Resources))
+
 local function save(player, release)
     local entry = service.get(player.UserId)
     if not entry then return end
@@ -117,19 +125,64 @@ if testEvent then
         service.grantCoins(player.UserId, 10) -- Amount fixed on server, arguments ignored.
     end)
 end
-local function connectPlayer(player)
-    player.CharacterAdded:Connect(function(character)
-        local humanoid = character:WaitForChild("Humanoid", 10)
-        if humanoid and service.active(player.UserId) then
-            local stats = service.snapshot(player.UserId).stats
-            humanoid.MaxHealth, humanoid.Health, humanoid.WalkSpeed = stats.Health, stats.Health, stats.WalkSpeed
+local function bindCharacter(player, character)
+    local userId = player.UserId
+    if healthConnections[userId] then healthConnections[userId]:Disconnect(); healthConnections[userId] = nil end
+    local humanoid = character:WaitForChild("Humanoid", 10)
+    if not humanoid or player.Character ~= character then return end
+    healthConnections[userId] = humanoid.HealthChanged:Connect(function()
+        if player.Character == character and service.active(userId) and not writingHealth[userId] then
+            service.setResource(userId, "Health", humanoid.Health)
         end
     end)
+    if service.active(userId) then service.resetResources(userId) end
+end
+sprintEvent.OnServerEvent:Connect(function(player, enabled)
+    if type(enabled) ~= "boolean" or not service.active(player.UserId) then return end
+    local now = os.clock()
+    -- Always accept release so a throttled button release cannot stick sprint on.
+    if enabled and now - (sprintTimes[player] or -math.huge) < 0.1 then return end
+    sprintTimes[player] = now
+    service.setSprinting(player.UserId, enabled)
+end)
+if drainEvent then
+    drainEvent.OnServerEvent:Connect(function(player)
+        local now = os.clock()
+        if not service.active(player.UserId) or now - (drainTimes[player] or -math.huge) < 1 then return end
+        drainTimes[player] = now
+        local snapshot = service.snapshot(player.UserId)
+        if snapshot.resources.Health <= 0 then return end
+        service.setResource(player.UserId, "Health", math.max(1, snapshot.resources.Health - 25))
+        for _, id in ipairs({"Mana", "Stamina"}) do
+            local cost = math.min(25, snapshot.resources[id])
+            if cost > 0 then service.consumeResource(player.UserId, id, cost) end
+        end
+    end)
+end
+local elapsed = 0
+RunService.Heartbeat:Connect(function(dt)
+    if closing then return end
+    elapsed = elapsed + dt
+    if elapsed < 0.2 then return end
+    local step = elapsed; elapsed = 0
+    for _, player in ipairs(Players:GetPlayers()) do
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid and service.active(player.UserId) then
+            service.setResource(player.UserId, "Health", humanoid.Health, true)
+            service.advanceResources(player.UserId, step)
+        end
+    end
+end)
+local function connectPlayer(player)
+    player.CharacterAdded:Connect(function(character) bindCharacter(player, character) end)
+    if player.Character then task.spawn(bindCharacter, player, player.Character) end
     task.spawn(joined, player)
 end
 Players.PlayerAdded:Connect(connectPlayer)
 Players.PlayerRemoving:Connect(function(player)
-    requestTimes[player], rewardTimes[player] = nil, nil
+    requestTimes[player], rewardTimes[player], sprintTimes[player], drainTimes[player] = nil, nil, nil, nil
+    if healthConnections[player.UserId] then healthConnections[player.UserId]:Disconnect(); healthConnections[player.UserId] = nil end
+    writingHealth[player.UserId] = nil
     save(player, true)
 end)
 for _, player in ipairs(Players:GetPlayers()) do connectPlayer(player) end

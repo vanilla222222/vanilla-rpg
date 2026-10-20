@@ -47,3 +47,25 @@ References:
 - https://create.roblox.com/docs/cloud-services/data-stores
 - https://create.roblox.com/docs/scripting/security/client-server-boundary
 - https://rojo.space/docs/v7/getting-started/new-game/
+
+## Stat categories and resources
+
+1. Verify 32 definitive stats, four defined stats, and current health/stamina/mana
+   in the HUD. Defaults are documented in STATS.md; skill list now includes farming.
+2. Press the Studio drain button. Each resource should lose 25 and regain 5 per
+   second, reaching full in roughly five seconds. Health must not receive an
+   additional default Roblox regeneration stream.
+3. Hold Shift: walk speed becomes 24 from base 16. Release or change window focus:
+   speed returns to 16. Tap the sprint toggle to test non-keyboard controls.
+4. Apply external server damage through Studio's Server command bar, for example
+   `game.Players:GetPlayers()[1].Character.Humanoid:TakeDamage(20)`. The HUD should
+   follow the actual Humanoid and regenerate at the configured rate.
+5. Kill and respawn: no regeneration revives the dead character; the new character
+   starts full and sprint is off. Test respawn while profile loading is delayed.
+6. A server stat modifier increasing Vitality/Endurance/Intelligence increases its
+   maximum without filling the resource. Removing it clamps excess current values.
+7. Stop/Play: current resources restart full; existing currency progress remains
+   governed by temporary versus persistent mode.
+
+Probability helpers are tested headlessly. No combat, mining, loot or XP-awarding
+activity has been wired to them yet.

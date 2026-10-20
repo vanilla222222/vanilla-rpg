@@ -49,11 +49,14 @@ Engine behavior and real DataStore requests have not been verified in this envir
   added when a future schema is introduced; no historical migrations exist yet.
 - Atomic UpdateAsync session lease; 60-second autosaves, three request attempts,
   ownership checks, expiration watchdog, leave/shutdown saves and late-load release.
-- Common stat definitions and deterministic source-keyed modifiers:
+- Definitive stats, formula-only defined stats and dynamic health/stamina/mana.
+  See [the stat contract](docs/STATS.md) for defaults, caps and probability rules.
+- Deterministic source-keyed modifiers:
   `(base + sum(flat)) × (1 + sum(percent)) × product(multiplier)`, then clamps.
-- Server-only PlayerService APIs for coins and modifiers. Derived stats are not saved.
+- Server-only PlayerService APIs for coins and modifiers. Derived stats and current resources are not saved.
 - Private client snapshots, rate-limited snapshot requests and Studio-only rewards.
-- Initial HUD and test baseplate. Current stat values/caps are provisional balance.
+- Categorized HUD, resource meters, Shift/touch sprint toggle and Studio resource-drain test button.
+- Initial test baseplate. Unspecified numeric ceilings remain provisional balance.
 
 ## Source layout
 
@@ -62,7 +65,9 @@ Engine behavior and real DataStore requests have not been verified in this envir
 | `src/shared` | Display definitions, permanent item IDs, table utilities |
 | `src/server/Profile.lua` | Schema, validation and currency rules |
 | `src/server/SessionStore.lua` | Dependency-injected persistence/lease protocol |
-| `src/server/Stats.lua` | Modifier engine |
+| `src/server/Stats.lua` | Definitive modifiers and defined dependency engine |
+| `src/server/Resources.lua` | Current health/stamina/mana and regeneration |
+| `src/shared/StatRules.lua` | Fortune, wisdom, crit, ability and mining spread helpers |
 | `src/server/PlayerService.lua` | Active-session mutation and snapshot API |
 | `src/server/Bootstrap.server.lua` | Roblox services, lifecycle and remote wiring |
 | `src/client` | Player HUD; no authority over progression |

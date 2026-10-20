@@ -1,0 +1,2 @@
+-- Intentionally replaces Roblox's default Health script.
+-- Regeneration is handled by the server Resources system at HealthRegen per second.

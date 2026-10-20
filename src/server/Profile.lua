@@ -6,7 +6,7 @@ function Profile.new(now)
     return {
         schemaVersion = Profile.VERSION, createdAt = now, updatedAt = now,
         currencies = {coins = 0},
-        skills = {foraging = {xp = 0}, mining = {xp = 0}, combat = {xp = 0}, fishing = {xp = 0}},
+        skills = {farming = {xp = 0}, foraging = {xp = 0}, mining = {xp = 0}, combat = {xp = 0}, fishing = {xp = 0}},
         inventory = {capacity = 30, slots = {}}, equipment = {}, collections = {},
         storage = {stacks = {}, unique = {}}, unlocks = {},
     }
