@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-20T17:41:52.408430+00:00",
+  "checkedAt": "2026-10-20T17:52:57.531636+00:00",
   "coreTests": {
     "runner": "texlua (portable Lua core, not Roblox/Luau engine)",
     "passed": 28,
@@ -8,17 +8,18 @@
   "placeBuild": {
     "tool": "Rojo 7.7.1",
     "passed": true,
-    "sourceMapping": "Rojo mapping passed: 13 scripts match source; persistence stays server-only; spawn exists."
+    "sourceMapping": "Rojo mapping passed: 14 scripts match source; persistence stays server-only; spawn exists."
   },
   "unverified": [
-    "New Inventory/Stats windows and compact HUD visual/play test in Roblox Studio",
-    "Real DataStore round trips, throttling and engine save lifecycle"
+    "Three-panel inventory visual/interaction test in Roblox Studio",
+    "Real DataStore round trips and engine integration"
   ],
   "sourceSha256": {
     "default.project.json": "b08f44f9719ef4e768a80eb1d8eb1912f34c87a54fe31a32f1ae3d22030b1205",
     "rokit.toml": "615025a4372c38deb6b977cb8defebab3acd1b55e8fc1424c105462cadf2df35",
     "src/character/Health.server.lua": "1ea607fadfc944b7a1ac2d655b899c1d77c070c9fac006c141a6ab27338ac5e7",
-    "src/client/Bootstrap.client.lua": "019bb733beac7454ad9959e751b83c454c58bbb665ae9ecf2814dec6a6f8b700",
+    "src/client/Bootstrap.client.lua": "be035a415be3f82d60321c272865f42569aecc08cc87deaec4a4f2327da82029",
+    "src/client/InventoryUI.lua": "6db34d1d799a7c6e1262b89c6716cf11dcab72a01a290c5cc00870d1d83af03c",
     "src/server/Bootstrap.server.lua": "9e14ddb77420e1875a83e1cb17d7a143ad62396ebb891ea2326d29ed0e8e45cb",
     "src/server/Config.lua": "8e75fcbe5282c22e80af801483cbfddecaa62b65de5117edcf15d85dbba06f4f",
     "src/server/PlayerService.lua": "65573904e79434ff98baa35ffff09d87f98e8201e63fd8f4a60b9608ac729593",

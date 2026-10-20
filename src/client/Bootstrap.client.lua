@@ -62,7 +62,7 @@ local function window(id,title,subtitle)
     close.Activated:Connect(function()panel.Visible=false;shade.Visible=false end)
     return content
 end
-local inventoryContent=window("Inventory","INVENTORY","Saved items & equipment · item management is coming next")
+local inventoryContent=window("Inventory","INVENTORY","Crafting  /  30-slot inventory  /  Equipment")
 local statsContent=window("Stats","PLAYER STATS","Definitive sources → defined values → dynamic resources")
 local function show(id)
     local opening=not windows[id].panel.Visible
@@ -88,38 +88,8 @@ for _,group in ipairs({"definitive","defined","dynamic"})do
     local keys={};for id in pairs(definitions[group])do table.insert(keys,id)end;table.sort(keys)
     for _,id in ipairs(keys)do order=order+1;statLabels[id]=row(statsContent,pretty(id),"—",order)end
 end
-local function clearRows(parent)
-    for _,child in ipairs(parent:GetChildren())do if child:IsA("GuiObject")then child:Destroy()end end
-end
-local inventoryKey
-local function renderInventory(data)
-    -- Inventory changes rarely; do not rebuild it for every resource regeneration tick.
-    local key=game:GetService("HttpService"):JSONEncode({data.inventory,data.equipment})
-    if inventoryKey==key then return end;inventoryKey=key
-    clearRows(inventoryContent)
-    section(inventoryContent,"BAG · "..data.inventory.capacity.." SLOTS",1)
-    local n=1;local occupied=0
-    local bagSlots={};for slot in pairs(data.inventory.slots)do table.insert(bagSlots,slot)end
-    table.sort(bagSlots,function(a,b)
-        local x,y=tonumber(a),tonumber(b)
-        if x and y and x~=y then return x<y end
-        return a<b
-    end)
-    for _,slot in ipairs(bagSlots)do
-        local item=data.inventory.slots[slot]
-        occupied=occupied+1;n=n+1
-        local id=type(item)=="table" and (item.itemId or item.id) or item
-        local name=type(id)=="string" and items[id] and items[id].name or tostring(id or "Unknown item")
-        row(inventoryContent,"Slot "..slot.." · "..name,type(item)=="table" and ("×"..tostring(item.quantity or 1)) or "×1",n)
-    end
-    if occupied==0 then n=n+1;row(inventoryContent,"Your bag is empty","0 / "..data.inventory.capacity,n)end
-    n=n+1;section(inventoryContent,"EQUIPMENT",n)
-    local slots={};for slot in pairs(data.equipment)do table.insert(slots,slot)end;table.sort(slots)
-    for _,slot in ipairs(slots)do
-        n=n+1;local item=data.equipment[slot]
-        row(inventoryContent,pretty(slot),item and (items[item] and items[item].name or tostring(item)) or "Empty",n)
-    end
-end
+windows.Inventory.panel:FindFirstChildOfClass("UISizeConstraint").MaxSize=Vector2.new(1120,650)
+local renderInventory=require(script.Parent.InventoryUI).mount(inventoryContent,make,text,round,color,items)
 local sprinting=false
 local function setSprint(enabled)sprinting=enabled;remotes.SetSprinting:FireServer(enabled)end
 sprint.Activated:Connect(function()setSprint(not sprinting)end)

@@ -67,8 +67,10 @@ level. A TEST DATA marker identifies temporary Studio mode.
 
 Inventory and Stats buttons open dismissible windows. Keyboard shortcuts: I for
 Inventory, C for Stats, Shift for sprint. Clicking outside or using the close
-button dismisses a window. Inventory is read-only and displays saved slots and
-18 equipment references; it is not an item-management implementation. Stats lists
+button dismisses a window. Inventory is read-only and displays 30 square slots in six columns/five rows,
+a 3x3 crafting grid to the left, and all 18 equipment slots to the right.
+Crafting inputs/output are placeholders; selecting any slot inspects its label.
+The attached three-panel layout scales down and scrolls on narrow screens; it is not an item-management implementation. Stats lists
 all definitive, defined and dynamic stats.
 
 ## Real saving in Studio
