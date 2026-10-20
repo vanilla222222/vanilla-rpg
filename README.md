@@ -1,0 +1,105 @@
+# Vanilla RPG
+
+A Roblox RPG inspired by collection-based progression. First milestone: player
+data and stats. Inventory, equipment, crafting and gathering are not implemented yet.
+
+## Linux Mint / Vinegar quick start
+
+Install the [Rojo 7.7.1 CLI and matching Studio plugin](https://github.com/rojo-rbx/rojo/releases/tag/v7.7.1).
+Vinegar runs Studio; run the Linux Rojo CLI in your normal Linux terminal.
+
+```bash
+git clone https://github.com/vanilla222222/vanilla-rpg.git
+cd vanilla-rpg
+mkdir -p build
+rojo build -o build/vanilla-rpg.rbxlx
+rojo serve
+```
+
+Keep the terminal running. In Studio, open `build/vanilla-rpg.rbxlx`, open the
+Rojo plugin and connect to `localhost:34872`. Press **Play**. Expect a baseplate,
+player stats and a **Studio test: +10 coins** button. Open Studio's Output window
+when reporting errors. The button has a one-second server cooldown; rewards are
+fixed by the server. It is absent in published servers.
+
+Studio defaults to **temporary in-memory data**: no API access is required and
+stopping the Studio server clears it. This mode is labelled on screen.
+Do not expect coins to survive Stop → Play in this default mode.
+
+### Testing actual persistence
+
+Use a separate private testing experience. Publish the place there. In Studio's
+experience security settings, enable **Studio Access to API Services** and set
+`PersistStudio = true` in `src/server/Config.lua`. Studio uses a separate store
+name from published servers. Published servers use DataStore persistence by default;
+there is no temporary fallback if loading fails. A failed/corrupt load kicks the
+player rather than creating and saving a blank replacement profile.
+
+Save/publish changes in Studio when testing published servers. Rojo live sync
+updates the open Studio session, not the published experience automatically.
+
+See [Studio acceptance checks](docs/TESTING.md) before enabling real-player use.
+Engine behavior and real DataStore requests have not been verified in this environment.
+
+## Implemented foundation
+
+- Versioned profiles, missing-field reconciliation, safe integer currencies,
+  reserved inventory/equipment/skill/collection/storage/unlock sections.
+- Fail-closed unsupported-version handling. Explicit migration hooks must be
+  added when a future schema is introduced; no historical migrations exist yet.
+- Atomic UpdateAsync session lease; 60-second autosaves, three request attempts,
+  ownership checks, expiration watchdog, leave/shutdown saves and late-load release.
+- Common stat definitions and deterministic source-keyed modifiers:
+  `(base + sum(flat)) × (1 + sum(percent)) × product(multiplier)`, then clamps.
+- Server-only PlayerService APIs for coins and modifiers. Derived stats are not saved.
+- Private client snapshots, rate-limited snapshot requests and Studio-only rewards.
+- Initial HUD and test baseplate. Current stat values/caps are provisional balance.
+
+## Source layout
+
+| Path | Responsibility |
+| --- | --- |
+| `src/shared` | Display definitions, permanent item IDs, table utilities |
+| `src/server/Profile.lua` | Schema, validation and currency rules |
+| `src/server/SessionStore.lua` | Dependency-injected persistence/lease protocol |
+| `src/server/Stats.lua` | Modifier engine |
+| `src/server/PlayerService.lua` | Active-session mutation and snapshot API |
+| `src/server/Bootstrap.server.lua` | Roblox services, lifecycle and remote wiring |
+| `src/client` | Player HUD; no authority over progression |
+| `tests/run.lua` | Headless core and persistence fault tests |
+
+The bootstrap is the composition root. Future inventory/crafting/gathering services
+receive the PlayerService instance there; clients never receive session tokens or
+raw profile tables. Collection credit will be awarded by eligible gathering events,
+not by deposits, withdrawals, trades or crafting. Those rules are design commitments,
+not implemented gathering functionality.
+
+Hub storage has no intended gameplay stack-capacity limit, but Roblox storage and
+number limits still exist. Stack quantities are safe integers; unique equipment
+will need per-instance records and capacity/sharding decisions before release.
+
+## Local checks
+
+With Lua 5.3+ installed:
+
+```bash
+lua tests/run.lua
+```
+
+`texlua tests/run.lua` also runs the portable core tests if TeX Live is available.
+These test logic using a fake atomic store; they do not emulate Roblox scheduling,
+network replication, Studio/Vinegar, platform throttling or DataStore availability.
+
+Build the place with Rojo to check instance mapping. No GitHub Actions workflows,
+paid services or monetization have been configured.
+
+## Development order
+
+1. Stats and player data — initial implementation; Studio acceptance pending.
+2. Inventory and equipment.
+3. Crafting.
+4. Collections and hub storage.
+5. Foraging.
+6. Mining.
+7. Combat.
+8. Fishing.
