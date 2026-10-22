@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-22T10:03:30.426168+00:00",
+  "checkedAt": "2026-10-22T10:11:04.535250+00:00",
   "coreTests": {
     "runner": "texlua (portable Lua core and GUI/instance adapters, not Roblox/Luau engine)",
     "passed": 74,
@@ -30,7 +30,7 @@
     "src/server/Inventory.lua": "1fe75fed57d1632d47ae398da2705d33cb2d878670a1fd7a20efc69669c7be56",
     "src/server/PlayerService.lua": "14294efd47f288003600304a3d861caebd115419d946a5ddf5563ac43fffe1c0",
     "src/server/Profile.lua": "59228be803e5138c1e2779df13d80cb409e2d33269228ab58f3d064c2874ff19",
-    "src/server/ResourceNodes.lua": "d578b52edc17e03b16214e9c75a0694cb5d351ec166cc25e6823fe79b1f03ae7",
+    "src/server/ResourceNodes.lua": "dee5ceb76579db3fb418bc10bf3e4a045ed68c2580f7710ca13ddd5bfbcab34c",
     "src/server/Resources.lua": "faf3b2d0815f8100381b178bf808c13abe38ed8b58d87c5bb15186832bf5b10d",
     "src/server/SessionStore.lua": "7709a2005fffab56fecb614e28ec72578f3a0056085add3ded7342bc120cf6d0",
     "src/server/StarterItems.lua": "922985417b57064f5f19a6bbed71253b77d7b9ea528b216ba95eab927d22d2d4",
@@ -49,7 +49,7 @@
     "tests/inventory-ui.lua": "d22ddc4d569731b11e2f197f2b7385e94247e0e527348ec63ed2bec247a9c02d",
     "tests/inventory.lua": "8c65975b5f09abab33f11b8449812fddeabe4e76d590b4fe3b9bf7064b8955d2",
     "tests/items.lua": "7533268c3eb017f161d1c6fa4cf965ff9c8f93c574f9115f70186fff31dbb454",
-    "tests/resource-nodes.lua": "666193a6a7638b44e25c8d711e09cbc1c70f114d144ee083c78f276854578f61",
+    "tests/resource-nodes.lua": "4caf50b95a2afaaa951115e63bb8670abb556568ed02b34329607f9f01769b70",
     "tests/run.lua": "951a39300d0a101d3caa517cb95c5bc5cec487353dfaeeab7e3e51e623743116",
     "tools/check-build.py": "507cdf13e7f95c8f537e7f71128b86d1ca76f5169e47407b8d2110b05b12c44a"
   }

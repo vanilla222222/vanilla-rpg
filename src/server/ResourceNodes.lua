@@ -13,16 +13,13 @@ function ResourceNodes.start(root,service,definitions,resultEvent,catalog)
         else
             -- Models are single nodes; folders may organize multiple models or individual parts.
             local function nodeFor(object)
-                local node=object
-                while node and node.Parent~=folder do
-                    if not node.Parent then return nil end
-                    if node.Parent:IsA('Model')then node=node.Parent
-                    elseif node.Parent:IsA('Folder')then
-                        if node:IsA('Model') or node:IsA('BasePart')then return node end
-                        return nil
-                    else node=node.Parent end
+                local current=object
+                local node=object:IsA('BasePart')and object or nil
+                while current and current~=folder do
+                    if current:IsA('Model')then node=current end
+                    current=current.Parent
                 end
-                if node and (node:IsA('Model')or node:IsA('BasePart'))then return node end
+                if current==folder then return node end
             end
             local function bind(object)
                 local node=nodeFor(object)
@@ -82,7 +79,7 @@ function ResourceNodes.start(root,service,definitions,resultEvent,catalog)
                     registered[node]=nil;prompt:Destroy()
                 end
                 connections[#connections+1]=node.AncestryChanged:Connect(function()
-                    if not node:IsDescendantOf(folder)then clean()end
+                    if not node:IsDescendantOf(folder)or nodeFor(node)~=node then clean();task.defer(bind,node)end
                 end)
                 connections[#connections+1]=part.AncestryChanged:Connect(function()
                     if node~=part and not part:IsDescendantOf(node)then clean();task.defer(bind,node)end
