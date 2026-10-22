@@ -24,7 +24,7 @@ No old Studio reward/drain remote should exist in either mode.
 - Stat modifiers are server-memory derived state; equipment/skill systems must
   rebuild them from saved progression. Modifier buffs are not persisted yet.
 - Currency counts use exact integers up to 2^53−1, not arbitrary precision.
-- Equip/unequip is available; general item management and crafting are deferred.
+- Equip/unequip and stack transfers are available; crafting and gathering are deferred.
 
 References:
 - https://create.roblox.com/docs/cloud-services/data-stores/player-data-purchasing
@@ -60,3 +60,13 @@ slot movement and bonuses. Check this at a small viewport without accessing foot
 buttons. Verify rapid ordinary clicks are not silently lost. If an operation fails,
 copy the server-side `Equipment request failed` Output message for diagnosis.
 Inspect rarity fills and the revised icons at normal and reduced UI scale.
+
+## Inventory transfers and expansion
+
+Use a controlled server fixture containing two material stacks and unique tools.
+Test Move/Swap, Split half and Merge, including full destinations and failed requests.
+Verify saved totals and instance IDs before/after, then rejoin a persistent test.
+Award 100 game XP through the server API: page two should unlock slot 31. Split a
+stack into that slot and merge it back onto page one. Old larger bags must not
+shrink. Keep Stats and hover checks working after equipment changes. These engine
+checks have not been run in this environment.

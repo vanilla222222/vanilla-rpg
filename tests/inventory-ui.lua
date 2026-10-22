@@ -46,17 +46,24 @@ return function(test,equal,rejects)
             local content=make('ScrollingFrame',{},make('Frame',{Visible=true}))
             local render
             local profile=dofile('src/server/Profile.lua').create(util)
+            local equipmentCore=dofile('src/server/Equipment.lua').create(catalog,util)
+            local inventoryCore=dofile('src/server/Inventory.lua').create(catalog,util,equipmentCore)
             local service
             local holder={}
             service=dofile('src/server/PlayerService.lua').new(profile,dofile('src/server/Stats.lua'),definitions,util,function()return 100 end,
-                function()if render then render(holder.service.snapshot(1))end end,dofile('src/server/Resources.lua'),dofile('src/server/Equipment.lua').create(catalog,util))
+                function()if render then render(holder.service.snapshot(1))end end,dofile('src/server/Resources.lua'),equipmentCore,inventoryCore)
             holder.service=service
             local data=profile.prepare(nil,100);dofile('src/server/StarterItems.lua').grant(data,1)
             service.attach(1,{data=data,expiresAt=1000})
-            local result=event();local remotes={EquipmentResult={OnClientEvent=result}}
-            remotes.Equipment={FireServer=function(_,action,slot,target)
-                local success,reason=pcall(service.changeEquipment,1,action,slot,target)
+            local result=event();local inventoryResult=event();local remotes={EquipmentResult={OnClientEvent=result},InventoryResult={OnClientEvent=inventoryResult}}
+            remotes.Equipment={FireServer=function(_,action,slot,target,revision)
+                local success,reason=pcall(service.changeEquipment,1,action,slot,target,revision)
                 result:Fire(success,success and 'Equipment updated' or tostring(reason))
+                assert(success,tostring(reason))
+            end}
+            remotes.Inventory={FireServer=function(_,action,from,to,amount,revision)
+                local success,reason=pcall(service.changeInventory,1,action,from,to,amount,revision)
+                inventoryResult:Fire(success,success and 'Inventory updated' or tostring(reason))
                 assert(success,tostring(reason))
             end}
             render=dofile('src/client/InventoryUI.lua').mount(content,make,text,function()end,color,catalog.all(),types,remotes)
@@ -80,6 +87,22 @@ return function(test,equal,rejects)
             local iconCount=0
             for _,o in ipairs(objects)do if o.Name=='ItemIcon' and not o.destroyed then iconCount=iconCount+1 end end
             assert(iconCount>=5,'Starter icons must render through the actual icon module')
+            service.grantGameXP(1,100);equal(service.snapshot(1).inventory.capacity,31)
+            service.grantStack(1,'stone',10)
+            find(bag,'Mode_split').Activated:Fire();find(bag,'Slot 1').Activated:Fire()
+            find(bag,'NextPage').Activated:Fire();find(bag,'Slot 1').Activated:Fire()
+            equal(service.snapshot(1).inventory.slots['31'].quantity,5)
+            equal(service.snapshot(1).inventory.slots['1'].quantity,5)
+            find(bag,'Mode_merge').Activated:Fire();find(bag,'Slot 1').Activated:Fire()
+            find(bag,'PreviousPage').Activated:Fire();find(bag,'Slot 1').Activated:Fire()
+            equal(service.snapshot(1).inventory.slots['31'],nil)
+            equal(service.snapshot(1).inventory.slots['1'].quantity,10)
+            find(bag,'Mode_move').Activated:Fire();find(bag,'Slot 1').Activated:Fire();find(bag,'Slot 2').Activated:Fire()
+            equal(service.snapshot(1).inventory.slots['1'],nil)
+            equal(service.snapshot(1).inventory.slots['2'].quantity,10)
+            find(bag,'Mode_equip').Activated:Fire();axe.Activated:Fire()
+            equal(service.snapshot(1).stats.Sweep,0)
+
         end)
         for _,name in ipairs(names)do _G[name]=originals[name]end
         math.clamp,math.atan2=oldClamp,oldAtan

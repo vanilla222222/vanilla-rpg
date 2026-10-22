@@ -1,6 +1,6 @@
 -- Server-only API. No client may choose reward amounts or write profiles.
 local PlayerService = {}
-function PlayerService.new(profile, Stats, definitions, util, clock, changed, Resources, Equipment)
+function PlayerService.new(profile, Stats, definitions, util, clock, changed, Resources, Equipment, Inventory)
     local entries = {}
     local api = {}
     function api.attach(userId, session)
@@ -65,12 +65,12 @@ function PlayerService.new(profile, Stats, definitions, util, clock, changed, Re
         entries[userId].resources.reconcile(values)
         changed(userId, "stats")
     end
-    function api.changeEquipment(userId,action,slot,target)
+    function api.changeEquipment(userId,action,slot,target,expected)
         assert(api.active(userId) and Equipment,"Equipment unavailable")
         local entry=entries[userId]
         local data
-        if action=="equip" then data=Equipment.equip(entry.session.data,slot,target)
-        elseif action=="unequip" then data=Equipment.unequip(entry.session.data,slot)
+        if action=="equip" then data=Equipment.equip(entry.session.data,slot,target,expected)
+        elseif action=="unequip" then data=Equipment.unequip(entry.session.data,slot,expected)
         else error("Unknown equipment action")end
         local modifiers={}
         for id,change in pairs(entry.modifiers or {})do if not id:match("^equipment:")then modifiers[id]=change end end
@@ -81,6 +81,33 @@ function PlayerService.new(profile, Stats, definitions, util, clock, changed, Re
         entry.session.data,entry.modifiers,entry.stats,entry.values=data,modifiers,calculator,values
         entry.resources.reconcile(values)
         changed(userId,"stats")
+    end
+    function api.changeInventory(userId,action,from,to,amount,expected)
+        assert(api.active(userId) and Inventory,"Inventory unavailable")
+        local entry=entries[userId]
+        entry.session.data=Inventory.change(entry.session.data,action,from,to,amount,expected)
+        changed(userId,"inventory")
+    end
+    function api.grantStack(userId,itemId,quantity)
+        assert(api.active(userId) and Inventory,"Inventory unavailable")
+        local entry=entries[userId]
+        entry.session.data=Inventory.grantStack(entry.session.data,itemId,quantity)
+        changed(userId,"inventory")
+    end
+    function api.removeStack(userId,itemId,quantity)
+        assert(api.active(userId) and Inventory,"Inventory unavailable")
+        local entry=entries[userId]
+        entry.session.data=Inventory.removeStack(entry.session.data,itemId,quantity)
+        changed(userId,"inventory")
+    end
+    function api.grantGameXP(userId,amount)
+        assert(api.active(userId),"Profile is not active")
+        assert(util.integer(amount,1,9007199254740991),"Invalid game XP reward")
+        local entry=entries[userId];local data=util.copy(entry.session.data)
+        assert(amount<=9007199254740991-data.gameXP,"Game XP overflow")
+        data.gameXP=data.gameXP+amount
+        entry.session.data=profile.prepare(data,clock())
+        changed(userId,"progression")
     end
     function api.setResource(userId, id, value, silent)
         assert(api.active(userId), "Profile is not active")

@@ -15,7 +15,7 @@ function Profile.new(now)
     return {
         schemaVersion = Profile.VERSION, createdAt = now, updatedAt = now,
         coins = 0, bank = 0, gameXP = 0, skills = skills,
-        inventory = {capacity = 30, slots = {}}, equipment = equipment, equipmentItems = {},
+        inventory = {capacity = 30, revision = 0, slots = {}}, equipment = equipment, equipmentItems = {},
         talismans = {}, museum = {}, quests = {}, collections = {},
         storage = {stacks = {}, unique = {}}, unlocks = {}, legacy = {},
     }
@@ -88,9 +88,17 @@ function Profile.create(util)
         end
         for _, id in ipairs({"farming", "foraging", "mining", "fishing"}) do skill(data.skills[id]) end
         for _, id in ipairs({"heavyMelee", "lightMelee", "magic", "ranged"}) do skill(data.skills.combat[id]) end
-        assert(util.integer(data.inventory.capacity, 1, 1000), "Invalid inventory capacity")
+        assert(util.integer(data.inventory.capacity, 1, Profile.MAX_INTEGER), "Invalid inventory capacity")
+        assert(util.integer(data.inventory.revision, 0, Profile.MAX_INTEGER), "Invalid inventory revision")
+        -- Never truncate a legacy larger bag or an already occupied high slot.
+        local capacity=math.max(30+math.floor(data.gameXP/100),data.inventory.capacity)
+        for key in pairs(data.inventory.slots)do
+            assert(type(key)=='string' and #key<=16 and key:match('^[1-9]%d*$') and tonumber(key)<=Profile.MAX_INTEGER,'Invalid saved inventory slot')
+            capacity=math.max(capacity,tonumber(key))
+        end
+        data.inventory.capacity=capacity
         counts(data.collections); counts(data.storage.stacks)
-        -- Equipment/unique item validation belongs to the inventory milestone.
+        -- Catalog-dependent ownership/quantity validation runs during atomic load and inventory operations.
         return data
     end
     function api.addCoins(data, amount)

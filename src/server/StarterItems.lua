@@ -6,7 +6,10 @@ function StarterItems.grant(data, userId)
     if data.unlocks.starterKitV1 then return false end
     local free = {}
     for index = 1, data.inventory.capacity do
-        if data.inventory.slots[tostring(index)] == nil then table.insert(free, tostring(index)) end
+        if data.inventory.slots[tostring(index)] == nil then
+            table.insert(free, tostring(index))
+            if #free==#StarterItems.ids then break end
+        end
     end
     -- Defer the entire kit if full; never replace items or leave a partial receipt.
     if #free < #StarterItems.ids then return false end

@@ -78,7 +78,8 @@ this change does not delete or migrate saved items.
 
 Twenty examples cover all nine types, all tool types, five armor slots and four
 weapon types. Equip/unequip and equipped stat application are implemented; see EQUIPMENT.md.
-General item moving/stack splitting, instance creation beyond the starter kit,
-item use, crafting, trade enforcement and other acquisition are deferred.
+Moving, swapping, splitting and merging are implemented; see INVENTORY.md.
+General unique-instance creation, item use, crafting, trade enforcement and
+other acquisition remain deferred.
 Next inventory work should store definition IDs separately from unique instance
 IDs and enforce these policies on the server.

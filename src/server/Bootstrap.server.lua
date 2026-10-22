@@ -8,8 +8,10 @@ local Util = require(Shared.TableUtil)
 local Definitions = require(Shared.StatDefinitions)
 local ItemCatalog = require(Shared.ItemCatalog).create(require(Shared.ItemDefinitions),require(Shared.ItemTypes),Definitions,Util)
 local Equipment = require(script.Parent.Equipment).create(ItemCatalog,Util)
+local Inventory = require(script.Parent.Inventory).create(ItemCatalog,Util,Equipment)
 local Profile = require(script.Parent.Profile).create(Util)
 local Config = require(script.Parent.Config)
+local StarterItems = require(script.Parent.StarterItems)
 local temporary = RunService:IsStudio() and not Config.PersistStudio
 local store
 if temporary then
@@ -26,7 +28,10 @@ else
 end
 local persistence = require(script.Parent.SessionStore).new(store, Profile, Util, {
     ttl = Config.LeaseSeconds, clock = os.time, sleep = task.wait,
-    onLoad = require(script.Parent.StarterItems).grant,
+    onLoad = function(data,userId)
+        StarterItems.grant(data,userId)
+        Inventory.validate(data)
+    end,
 })
 local remotes = Instance.new("Folder")
 remotes.Name = "RPGRemotes"
@@ -38,6 +43,10 @@ local equipmentEvent = Instance.new("RemoteEvent")
 equipmentEvent.Name,equipmentEvent.Parent="Equipment",remotes
 local equipmentResult = Instance.new("RemoteEvent")
 equipmentResult.Name,equipmentResult.Parent="EquipmentResult",remotes
+local inventoryEvent=Instance.new("RemoteEvent")
+inventoryEvent.Name,inventoryEvent.Parent="Inventory",remotes
+local inventoryResult=Instance.new("RemoteEvent")
+inventoryResult.Name,inventoryResult.Parent="InventoryResult",remotes
 local sprintEvent = Instance.new("RemoteEvent")
 sprintEvent.Name, sprintEvent.Parent = "SetSprinting", remotes
 remotes.Parent = ReplicatedStorage -- Publish only once all endpoints exist.
@@ -66,7 +75,7 @@ local function publish(userId, reason)
     end
     snapshotEvent:FireClient(player, snapshot)
 end
-service = require(script.Parent.PlayerService).new(Profile, require(script.Parent.Stats), Definitions, Util, os.time, publish, require(script.Parent.Resources), Equipment)
+service = require(script.Parent.PlayerService).new(Profile, require(script.Parent.Stats), Definitions, Util, os.time, publish, require(script.Parent.Resources), Equipment, Inventory)
 
 local function save(player, release)
     local entry = service.get(player.UserId)
@@ -144,26 +153,50 @@ sprintEvent.OnServerEvent:Connect(function(player, enabled)
     sprintTimes[player] = now
     service.setSprinting(player.UserId, enabled)
 end)
-equipmentEvent.OnServerEvent:Connect(function(player,action,slot,target)
+equipmentEvent.OnServerEvent:Connect(function(player,action,slot,target,expected)
     if not service.active(player.UserId) or (action~="equip" and action~="unequip") then return end
     if type(slot)~="string" or #slot>32 or (target~=nil and (type(target)~="string" or #target>32))then return end
+    if not Util.integer(expected,0,9007199254740991)then equipmentResult:FireClient(player,false,"Wait for your inventory to load, then try again.");return end
     local now=os.clock()
     local bucket=equipmentTimes[player] or {tokens=8,updated=now}
     bucket.tokens=math.min(8,bucket.tokens+math.max(0,now-bucket.updated)*6)
     bucket.updated=now;equipmentTimes[player]=bucket
     if bucket.tokens<1 then equipmentResult:FireClient(player,false,"Please wait a moment before changing equipment again.");return end
     bucket.tokens=bucket.tokens-1
-    local ok,problem=pcall(service.changeEquipment,player.UserId,action,slot,target)
+    local ok,problem=pcall(service.changeEquipment,player.UserId,action,slot,target,expected)
     local message="Equipment updated"
     if not ok then
         local raw=tostring(problem)
         warn("Equipment request failed for "..player.UserId.." ("..action..", "..slot.."): "..raw)
-        if raw:find("Inventory is full",1,true)then message="Inventory is full. Make room before unequipping."
+        if raw:find("Inventory changed",1,true)then message="Inventory changed. Please try again."
+        elseif raw:find("Inventory is full",1,true)then message="Inventory is full. Make room before unequipping."
         elseif raw:find("requirement not met",1,true)then message="You do not meet this item's requirements."
         elseif raw:find("does not fit",1,true)then message="That item does not fit this equipment slot."
         else message="Unable to equip that item. Select an owned equipment item and try again."end
     end
     equipmentResult:FireClient(player,ok,message)
+end)
+inventoryEvent.OnServerEvent:Connect(function(player,action,from,to,amount,expected)
+    if not service.active(player.UserId)then return end
+    if action~="move" and action~="split" and action~="merge" and action~="swap"then return end
+    if type(from)~="string" or #from>16 or type(to)~="string" or #to>16 then return end
+    if amount~=nil and not Util.integer(amount,1,1000000)then return end
+    local now=os.clock();local bucket=equipmentTimes[player] or {tokens=8,updated=now}
+    bucket.tokens=math.min(8,bucket.tokens+math.max(0,now-bucket.updated)*6);bucket.updated=now
+    equipmentTimes[player]=bucket
+    if bucket.tokens<1 then inventoryResult:FireClient(player,false,"Please wait a moment before moving more items.");return end
+    bucket.tokens=bucket.tokens-1
+    local ok,problem=pcall(service.changeInventory,player.UserId,action,from,to,amount,expected)
+    local message="Inventory updated"
+    if not ok then
+        local raw=tostring(problem)
+        if raw:find("Inventory changed",1,true)then message="Inventory changed. Please select the item again."
+        elseif raw:find("full",1,true)then message="That destination has no room."
+        elseif raw:find("compatible",1,true)then message="Only matching stacks with the same properties can merge."
+        elseif raw:find("Split requires",1,true)then message="Split a stack into an empty slot."
+        else message="Unable to move those items. Select a valid source and destination."end
+    end
+    inventoryResult:FireClient(player,ok,message)
 end)
 local elapsed = 0
 RunService.Heartbeat:Connect(function(dt)

@@ -3,7 +3,7 @@
 ## Controls
 
 Open Inventory and **click an owned gear item to equip it**. Click an occupied
-equipment square to unequip it. No footer buttons are needed. Tools, armor and accessories choose their matching slot;
+equipment square to unequip it. Select Equip mode first. No footer buttons are needed. Tools, armor and accessories choose their matching slot;
 weapons choose the first empty weapon slot or swap weapon1 when all four are full.
 Mouse hover and gamepad
 selection show a separate name/description/rarity/stat card that follows the pointer
@@ -60,12 +60,12 @@ rarity, properties and stat modifiers.
 
 ## Verification
 
-50 portable Lua tests cover equipment stat application/removal, reconstruction,
+61 portable Lua tests cover equipment stat application/removal, reconstruction,
 transactional swaps, invalid/replayed requests, reserved sources, duplicate/broken
 references, requirements, full bags and a fake-store save/reload round trip.
 A real InventoryUI controller test drives clicks/hover through GUI adapters and
 server equipment logic, including applying/removing bonuses. This is not a real
 Roblox renderer or hit-test. Server request limiting now accepts a short burst
 and returns an explicit message instead of silently discarding rapid actions.
-Rojo builds and embeds all 21 scripts. Icon appearance, selection controls and
+Rojo builds and embeds all 22 scripts. Icon appearance, selection controls and
 live Humanoid/stat updates still require Roblox Studio testing.

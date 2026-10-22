@@ -1,8 +1,8 @@
 # Vanilla RPG
 
 A Roblox RPG inspired by collection-based progression. First milestone: player
-data and stats. Inventory ownership and equipment are implemented for the starter kit. General
-inventory management, crafting and gathering are not implemented yet.
+data and stats. Inventory ownership and equipment are implemented for the starter kit. Inventory transfer/stack handling and level-based expansion are implemented.
+Crafting and gathering are not implemented yet.
 
 ## Linux Mint / Vinegar quick start
 
@@ -58,6 +58,8 @@ Engine behavior and real DataStore requests have not been verified in this envir
 - One-time starter kit on join: axe, pickaxe, sword, hoe and fishing rod.
 - Validated item catalog: nine types, rarity/policy metadata, stat modifiers and
   twenty provisional examples. See [item definitions](docs/ITEMS.md).
+- Move/swap/split/merge modes, paged level-based inventory expansion, server reward
+  APIs and stale-request protection. See [inventory](docs/INVENTORY.md).
 - Inventory equip/unequip controls, five procedural starter icons, complete Stats
   window and compact bottom-left resource HUD. See [equipment](docs/EQUIPMENT.md).
 - Initial test baseplate. Unspecified numeric ceilings remain provisional balance.
@@ -67,6 +69,7 @@ Engine behavior and real DataStore requests have not been verified in this envir
 | Path | Responsibility |
 | --- | --- |
 | `src/shared` | Display definitions, permanent item IDs, table utilities |
+| `src/server/Inventory.lua` | Atomic transfers, stack rewards and removals |
 | `src/server/Profile.lua` | Schema, validation and currency rules |
 | `src/server/SessionStore.lua` | Dependency-injected persistence/lease protocol |
 | `src/server/Stats.lua` | Definitive modifiers and defined dependency engine |

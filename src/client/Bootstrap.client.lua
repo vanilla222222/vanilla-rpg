@@ -65,7 +65,7 @@ local function window(id,title,subtitle)
     close.Activated:Connect(function()panel.Visible=false;shade.Visible=false end)
     return content
 end
-local inventoryContent=window("Inventory","INVENTORY","Crafting  /  30-slot inventory  /  Equipment")
+local inventoryContent=window("Inventory","INVENTORY","Crafting  /  Expandable inventory  /  Equipment")
 local statsContent=window("Stats","PLAYER STATS","Definitive sources → defined values → dynamic resources")
 local function show(id)
     local opening=not windows[id].panel.Visible

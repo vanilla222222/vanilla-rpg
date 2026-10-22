@@ -36,7 +36,13 @@ function Equipment.create(catalog,util)
             assert(skill and skill.level>=level,"Skill level requirement not met: "..id)
         end
     end
-    function api.equip(data,bagSlot,target)
+    local function revision(data,expected)
+        local current=data.inventory.revision or 0
+        assert(util.integer(current,0,9007199254740990),'Invalid inventory revision')
+        if expected~=nil then assert(expected==current,'Inventory changed; try again')end
+        return current+1
+    end
+    function api.equip(data,bagSlot,target,expected)
         assert(type(bagSlot)=="string" and bagSlot:match('^[1-9]%d*$') and tonumber(bagSlot)<=data.inventory.capacity,"Invalid inventory slot")
         api.modifiers(data)
         local item=data.inventory.slots[bagSlot];local definition=record(item)
@@ -55,10 +61,11 @@ function Equipment.create(catalog,util)
         if previous then nextData.equipmentItems[previous]=nil end
         nextData.equipment[target]=item.instanceId
         nextData.equipmentItems[item.instanceId]=util.copy(item)
+        nextData.inventory.revision=revision(data,expected)
         api.modifiers(nextData)
         return nextData
     end
-    function api.unequip(data,slot)
+    function api.unequip(data,slot,expected)
         assert(type(slot)=='string' and data.equipment[slot],"Equipment slot is empty")
         api.modifiers(data)
         local free
@@ -67,6 +74,7 @@ function Equipment.create(catalog,util)
         local nextData=util.copy(data);local id=nextData.equipment[slot]
         nextData.inventory.slots[free]=nextData.equipmentItems[id]
         nextData.equipmentItems[id]=nil;nextData.equipment[slot]=false
+        nextData.inventory.revision=revision(data,expected)
         api.modifiers(nextData)
         return nextData
     end
