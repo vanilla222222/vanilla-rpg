@@ -1,6 +1,8 @@
 -- Collection counters increase only for eligible gathering rewards, not transfers.
 -- Enchanted conversion data is ready for the later crafting system.
 return {
+    raspberry={name='Raspberry',itemId='raspberry',enchantedItemId='enchanted_raspberry',conversionCount=160},
+    raspberry_thorn={name='Raspberry Thorn',itemId='raspberry_thorn',enchantedItemId='enchanted_raspberry_thorn',conversionCount=160},
     oak={name='Oak Wood',itemId='oak_log',enchantedItemId='enchanted_oak_log',conversionCount=160},
     oak_leaves={name='Oak Leaves',itemId='oak_leaves',enchantedItemId='enchanted_oak_leaves',conversionCount=160},
     oak_stick={name='Oak Stick',itemId='oak_stick',enchantedItemId='enchanted_oak_stick',conversionCount=160},

@@ -76,6 +76,10 @@
             "oak": {
               "$className": "Folder",
               "$ignoreUnknownInstances": true
+            },
+            "raspberry": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true
             }
           },
           "mining": {

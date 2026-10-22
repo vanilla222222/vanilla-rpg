@@ -17,18 +17,21 @@ local items = {
     health_tonic={name="Health Tonic",kind="consumable",effectId="restore_health",description="Effect implementation pending."},
     sealed_letter={name="Sealed Letter",kind="questItem",description="A quest object. Quest implementation pending."},
 }
-local oakMaterials={
+local resourceMaterials={
     oak_log={name='Oak Wood',collection='oak',rarity='common'},
     oak_leaves={name='Oak Leaves',collection='oak_leaves',rarity='common'},
     oak_stick={name='Oak Stick',collection='oak_stick',rarity='common'},
     oak_sap={name='Oak Sap',collection='oak_sap',rarity='uncommon'},
     oak_core={name='Oak Core',collection='oak_core',rarity='rare'},
 }
-for id,entry in pairs(oakMaterials)do
+resourceMaterials.raspberry={name='Raspberry',collection='raspberry',rarity='common',group='raspberry'}
+resourceMaterials.raspberry_thorn={name='Raspberry Thorn',collection='raspberry_thorn',rarity='common',group='raspberry'}
+for id,entry in pairs(resourceMaterials)do
+    local group=entry.group or 'oak'
     items[id]={name=entry.name,kind='material',collection=entry.collection,rarity=entry.rarity,
-        tags={'oak','foraging'},description='Gathered from oak trees. Tracks its own collection.'}
+        tags={group,'foraging'},description='Gathered from '..(group=='oak' and 'oak trees' or 'raspberry bushes')..'. Tracks its own collection.'}
     items['enchanted_'..id]={name='Enchanted '..entry.name,kind='craftingComponent',collection=entry.collection,
-        rarity='rare',tags={'oak','foraging','enchanted'},description='An enchanted form of '..entry.name..'. Crafting integration is pending.'}
+        rarity='rare',tags={group,'foraging','enchanted'},description='An enchanted form of '..entry.name..'. Crafting integration is pending.'}
 end
 items.oak_talisman.description='A rare oak charm. Automatically joins the talisman bag; its foraging bonus applies once.'
 for _,slot in ipairs({"helmet","chestplate","gloves","leggings","boots"}) do

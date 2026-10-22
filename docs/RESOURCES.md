@@ -1,4 +1,4 @@
-# Placeable resources and oak harvesting
+# Placeable resources: oak trees and raspberry bushes
 
 ## Place your trees in Studio
 
@@ -27,8 +27,7 @@ before Play; restart Play after changing a bound model's interaction-part choice
 Do not put a pre-existing Harvest prompt or a reward script inside the model.
 
 The project creates folders for **foraging, mining, farming, fishing and combat**.
-Combat also reserves **heavyMelee, lightMelee, magic and ranged** subfolders. Only
-`foraging/oak` has an activity definition so far; other folders are placement
+Combat also reserves **heavyMelee, lightMelee, magic and ranged** subfolders. `foraging/oak` and `foraging/raspberry` have activity definitions; other folders are placement
 space for upcoming systems. Resources belong in Workspace, not ServerStorage.
 
 These folders preserve unknown Studio instances during Rojo synchronization.
@@ -36,6 +35,34 @@ These folders preserve unknown Studio instances during Rojo synchronization.
 into the Git repository by Rojo, and rebuilding/opening the empty place file does
 not recover models from an older saved place. Save/publish outside Play mode;
 models placed during Play disappear when the play session ends.
+
+## Raspberry bushes
+
+Place bush Models under **Workspace → Home → ResourceInteractions → foraging → raspberry**.
+Use the same anchored InteractionPart/PrimaryPart convention described above.
+Press **E once nearby** to Pick; no axe, hoe or other tool is required, and no
+hold is necessary. Touch and gamepad use the native prompt button.
+
+Each successful pick independently awards **Raspberry (100%)** and rolls
+**Raspberry Thorn (25%)**, before ForagingFortune. Both have separate collection
+counters and enchanted item definitions. These rates are provisional because no
+raspberry loot rates were specified. Each pick gives **3 base foraging XP**,
+scaled by wisdom with fractional carry, using the same atomic reward/save flow
+as oak. Raspberries are crafting materials; eating/healing is not implemented.
+
+The bush replenishes after **15 seconds per player**. Attempts while it regrows
+show how many seconds remain. Other players have independent harvest timers.
+The bush stays visible throughout; this implements timed reward regeneration,
+not a berry disappearance/growth animation. The timer is server-session state.
+Timing, XP and drop chances live in `ResourceDefinitions.lua`.
+
+Enchanted Raspberry and Enchanted Raspberry Thorn use the same provisional
+160-to-1 conversion metadata as oak. Executable crafting is still pending.
+
+Studio check: with the axe unequipped, approach a bush and tap E. Confirm a
+raspberry reward, a thorn chance, collection increments and foraging XP. Tap
+again to see the regrowth countdown; picking must succeed again after 15 seconds.
+Also test walls, full bags and two players independently harvesting the bush.
 
 ## Oak rewards
 

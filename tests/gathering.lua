@@ -17,7 +17,7 @@ return function(test,equal,rejects)
         for id,change in pairs(equipment.modifiers(data))do stats.set(id,change)end
         return data,stats.calculate()
     end
-    test('oak defines exact independent base rates and five enchanted collection links',function()
+    test('oak base rates and all seven enchanted collection links match the catalog',function()
         local expected={100,50,25,10,1,.1}
         for i,entry in ipairs(resources.oak.loot)do equal(entry.chance,expected[i])end
         local n=0
@@ -26,14 +26,17 @@ return function(test,equal,rejects)
             equal(catalog.get(entry.enchantedItemId).collection,id)
             assert(catalog.get(entry.enchantedItemId).stackable);n=n+1
         end
-        equal(n,5);equal(catalog.get('oak_talisman').collection,nil)
+        equal(n,7);equal(catalog.get('oak_talisman').collection,nil)
         equal(catalog.get('enchanted_oak_talisman'),nil)
     end)
     test('one harvest can independently award all loot and raw collection counts',function()
         local data,stats=ready();local calls=0
         local result,reward=gathering.harvest(data,stats,'oak',function()calls=calls+1;return 0 end)
         equal(#reward.loot,6);equal(calls,5);equal(reward.xp,10)
-        for id in pairs(collections)do equal(result.collections[id],1);equal(data.collections[id],nil)end
+        for _,drop in ipairs(resources.oak.loot)do
+            local id=catalog.get(drop.itemId).collection
+            if id then equal(result.collections[id],1);equal(data.collections[id],nil)end
+        end
         equal(result.talismans.oak_talisman.count,1);equal(result.skills.foraging.xp,10)
         equal(data.skills.foraging.xp,0);equal(data.talismans.oak_talisman,nil)
     end)
@@ -52,7 +55,9 @@ return function(test,equal,rejects)
         equal(result.collections.oak,2);equal(result.collections.oak_leaves,1);equal(reward.xp,50)
         stats.ForagingFortune=1000000
         result=gathering.harvest(data,stats,'oak',function()return .999 end)
-        for id in pairs(collections)do equal(result.collections[id],5)end
+        for _,drop in ipairs(resources.oak.loot)do
+            local id=catalog.get(drop.itemId).collection;if id then equal(result.collections[id],5)end
+        end
         equal(result.talismans.oak_talisman.count,5)
         stats.ForagingFortune=100;stats.ForagingWisdom=105
         result,reward=gathering.harvest(data,stats,'oak',function()return .999 end)
@@ -121,6 +126,31 @@ return function(test,equal,rejects)
         equal(statsAfter.calculate().ForagingFortune,105)
         local wood=0;for _,item in pairs(loaded.inventory.slots)do if item.itemId=='oak_log'then wood=wood+item.quantity end end
         equal(wood,1)
+    end)
+    test('raspberry harvest needs no tool and independently rolls berries and thorns',function()
+        local data=profile.prepare(nil,100)
+        local stats=Stats.new(defs,util).calculate()
+        equal(resources.raspberry.toolSlot,nil);equal(resources.raspberry.holdSeconds,0)
+        local result,reward=gathering.harvest(data,stats,'raspberry',function()return 0 end)
+        equal(#reward.loot,2);equal(result.collections.raspberry,1);equal(result.collections.raspberry_thorn,1)
+        equal(result.skills.foraging.xp,3);equal(result.skills.farming.xp,0)
+        equal(data.collections.raspberry,nil);equal(data.skills.foraging.xp,0)
+        result,reward=gathering.harvest(data,stats,'raspberry',function()return .25 end)
+        equal(#reward.loot,1);equal(result.collections.raspberry,1);equal(result.collections.raspberry_thorn,nil)
+        stats.ForagingFortune=200;stats.ForagingWisdom=500
+        result,reward=gathering.harvest(data,stats,'raspberry',function()return .49 end)
+        equal(result.collections.raspberry,2);equal(result.collections.raspberry_thorn,1);equal(reward.xp,15)
+    end)
+    test('tool-free full bag rejects berry rewards and XP before randomness',function()
+        local data=profile.prepare(nil,100);local stats=Stats.new(defs,util).calculate()
+        for i=1,30 do data.inventory.slots[tostring(i)]={itemId='oak_log',quantity=9999}end
+        local calls=0
+        rejects(function()gathering.harvest(data,stats,'raspberry',function()calls=calls+1;return 0 end)end)
+        equal(calls,0);equal(data.collections.raspberry,nil);equal(data.skills.foraging.xp,0)
+    end)
+    test('incomplete tool requirements fail instead of silently becoming tool-free',function()
+        local bad=util.copy(resources);bad.oak.toolSlot=nil
+        rejects(function()dofile('src/server/Gathering.lua').create(bad,catalog,collections,inventory,rules,util)end)
     end)
     test('inventory grants do not create collection credit',function()
         local data=ready();data=inventory.grantStack(data,'oak_log',100)

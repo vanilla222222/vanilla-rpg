@@ -1,6 +1,9 @@
 -- Small engine adapter drives the real node controller. Not a Roblox simulation.
 return function(test,equal)
-    local function fixture()
+    local function fixture(resourceId)
+        resourceId=resourceId or 'oak'
+        local definition=dofile('src/shared/ResourceDefinitions.lua')[resourceId]
+        assert(definition,'Missing fixture resource definition')
         local now=100
         local function signal()
             local callbacks={};local event={}
@@ -40,7 +43,7 @@ return function(test,equal)
         function vector.__sub(a,b)return {Magnitude=math.abs(a.x-b.x)}end
         local function position(x)return setmetatable({x=x},vector)end
         local root=object('Folder','ResourceInteractions')
-        local foraging=object('Folder','foraging',root);local oak=object('Folder','oak',foraging)
+        local foraging=object('Folder','foraging',root);local oak=object('Folder',definition.path[2],foraging)
         local tree=object('Model','Tree',oak);local trunk=object('Part','InteractionPart',tree);trunk.Position=position(4)
         local crown=object('Model','Crown',tree);object('Part','Leaf',crown).Position=position(5)
         local branches=object('Folder','Branches',tree)
@@ -54,16 +57,16 @@ return function(test,equal)
         local prompts={};local service={active=function()return true end};local harvests=0;local problem
         function service.harvestResource()
             if problem then error(problem)end
-            harvests=harvests+1;return {xp=10,loot={{itemId='oak_log',quantity=1}}}
+            harvests=harvests+1;return {xp=definition.baseXP,loot={{itemId=definition.loot[1].itemId,quantity=1}}}
         end
         local messages={};local remote={FireClient=function(_,p,ok,message)table.insert(messages,{p=p,ok=ok,message=message})end}
         local env=setmetatable({game={GetService=function(_,id)if id=='Players'then return players else return world end end},
             Random={new=function()return {NextNumber=function()return .5 end}end},
             Instance={new=function(k)local p=object(k,k);p.PromptButtonHoldBegan=signal();p.Triggered=signal();table.insert(prompts,p);return p end},
-            RaycastParams={new=function()return {}end},Enum={RaycastFilterType={Exclude=1}},
+            RaycastParams={new=function()return {}end},Enum={RaycastFilterType={Exclude=1},KeyCode={E='E'}},
             task={defer=function(fn,...)fn(...)end},os={clock=function()return now end},warn=function()end},{__index=_G})
         local nodes=assert(loadfile('src/server/ResourceNodes.lua','t',env))()
-        nodes.start(root,service,dofile('src/shared/ResourceDefinitions.lua'),remote,{get=function()return {name='Oak Wood'}end})
+        nodes.start(root,service,{[resourceId]=definition},remote,{get=function()return {name=resourceId=='raspberry'and 'Raspberry' or 'Oak Wood'}end})
         return {prompts=prompts,player=player,players=players,body=body,humanoid=humanoid,world=world,tree=tree,trunk=trunk,oak=oak,messages=messages,
             object=object,position=position,step=function(seconds)now=now+seconds end,count=function()return harvests end,
             fail=function(value)problem=value end}
@@ -104,4 +107,25 @@ return function(test,equal)
         equal(f.count(),0);assert(not f.messages[1].ok);assert(f.messages[1].message:find('room'))
         f.fail(nil);p.PromptButtonHoldBegan:Fire(f.player);f.step(1);p.Triggered:Fire(f.player);equal(f.count(),1)
     end)
+    test('quick-press raspberry bush harvest needs no hold and regenerates after cooldown',function()
+        local f=fixture('raspberry');local p=f.prompts[1]
+        equal(p.HoldDuration,0);equal(p.KeyboardKeyCode,'E');equal(p.ActionText,'Pick')
+        p.Triggered:Fire(f.player);equal(f.count(),1);assert(f.messages[1].ok)
+        -- A rapid repeated keypress cannot create another harvest.
+        p.Triggered:Fire(f.player);equal(f.count(),1)
+        f.step(.25);p.Triggered:Fire(f.player);equal(f.count(),1)
+        assert(not f.messages[2].ok);assert(f.messages[2].message:find('Raspberry Bush is regrowing',1,true))
+        f.step(14.5);p.Triggered:Fire(f.player);equal(f.count(),1)
+        f.step(.25);p.Triggered:Fire(f.player);equal(f.count(),2);assert(f.messages[#f.messages].ok)
+    end)
+    test('quick-press bushes retain server distance, health, anchoring and visibility checks',function()
+        local f=fixture('raspberry');local p=f.prompts[1]
+        f.body.Position=f.position(40);p.Triggered:Fire(f.player);equal(f.count(),0)
+        f.body.Position=f.position(0);f.humanoid.Health=0;p.Triggered:Fire(f.player);equal(f.count(),0)
+        f.humanoid.Health=100;f.trunk.Anchored=false;p.Triggered:Fire(f.player);equal(f.count(),0)
+        f.trunk.Anchored=true;f.world.hit={Instance=f.object('Part','Wall')}
+        p.Triggered:Fire(f.player);equal(f.count(),0)
+        f.world.hit=nil;p.Triggered:Fire(f.player);equal(f.count(),1)
+    end)
+
 end

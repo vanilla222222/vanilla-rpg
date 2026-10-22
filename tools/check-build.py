@@ -41,8 +41,9 @@ assert folders['$ignoreUnknownInstances'] is True
 for skill in ['foraging','mining','farming','fishing','combat']:
     assert folders[skill]['$ignoreUnknownInstances'] is True
     assert instances['/Workspace/Home/ResourceInteractions/'+skill].attrib['class']=='Folder'
-assert folders['foraging']['oak']['$ignoreUnknownInstances'] is True
-assert '/Workspace/Home/ResourceInteractions/foraging/oak' in instances
+for resource in ['oak','raspberry']:
+    assert folders['foraging'][resource]['$ignoreUnknownInstances'] is True
+    assert '/Workspace/Home/ResourceInteractions/foraging/'+resource in instances
 for skill in ['heavyMelee','lightMelee','magic','ranged']:
     assert folders['combat'][skill]['$ignoreUnknownInstances'] is True
     assert '/Workspace/Home/ResourceInteractions/combat/'+skill in instances

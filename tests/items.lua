@@ -9,7 +9,7 @@ return function(test,equal,rejects)
         local catalog=build(raw);local counts={};local n=0
         for id,item in pairs(catalog.all())do counts[item.kind]=true;n=n+1;equal(item.id,id)end
         for kind in pairs(types.kinds)do assert(counts[kind],kind)end
-        equal(n,29);equal(catalog.get('oak_log').name,'Oak Wood');equal(catalog.get('starter_axe').toolType,'axe')
+        equal(n,33);equal(catalog.get('oak_log').name,'Oak Wood');equal(catalog.get('starter_axe').toolType,'axe')
         equal(catalog.get('missing'),nil)
     end)
     test('normalized defaults do not mutate raw or catalog state',function()

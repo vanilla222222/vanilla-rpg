@@ -29,7 +29,8 @@ function ResourceNodes.start(root,service,definitions,resultEvent,catalog)
                 part=part or node.PrimaryPart or node:FindFirstChildWhichIsA('BasePart',true)
                 if not part then return end -- A later descendant event retries empty models.
                 local prompt=Instance.new('ProximityPrompt')
-                prompt.Name='ResourcePrompt';prompt.ActionText='Harvest';prompt.ObjectText=definition.name
+                prompt.Name='ResourcePrompt';prompt.ActionText=definition.actionText or 'Harvest';prompt.ObjectText=definition.name
+                prompt.KeyboardKeyCode=Enum.KeyCode.E
                 prompt.HoldDuration=definition.holdSeconds;prompt.MaxActivationDistance=definition.distance
                 prompt.RequiresLineOfSight=true
                 local holds,cooldowns,connections={},{},{}
@@ -49,15 +50,16 @@ function ResourceNodes.start(root,service,definitions,resultEvent,catalog)
                 end
                 connections[#connections+1]=prompt.PromptButtonHoldBegan:Connect(function(player)
                     holds[player]=nil
-                    if valid(player)then holds[player]=os.clock()end
+                    if definition.holdSeconds>0 and valid(player)then holds[player]=os.clock()end
                 end)
                 connections[#connections+1]=prompt.Triggered:Connect(function(player)
                     local now=os.clock();local began=holds[player];holds[player]=nil
-                    if not began or now-began<definition.holdSeconds-.1 or now-began>definition.holdSeconds+3 or not valid(player)then return end
+                    if definition.holdSeconds>0 and (not began or now-began<definition.holdSeconds-.1 or now-began>definition.holdSeconds+3)then return end
+                    if not valid(player)then return end
                     if now-(attempts[player]or -math.huge)<.25 then return end
                     attempts[player]=now
                     if now<(cooldowns[player]or 0)then
-                        message(player,false,'This tree is recovering. Try again in '..math.ceil(cooldowns[player]-now)..'s.');return
+                        message(player,false,definition.name..' is regrowing. Try again in '..math.ceil(cooldowns[player]-now)..'s.');return
                     end
                     local ok,reward=pcall(service.harvestResource,player.UserId,id,function()return random:NextNumber()end)
                     if ok then
@@ -67,9 +69,9 @@ function ResourceNodes.start(root,service,definitions,resultEvent,catalog)
                         message(player,true,table.concat(drops,', ')..'  ·  +'..reward.xp..' '..definition.skill..' XP')
                     else
                         local raw=tostring(reward)
-                        if raw:find('Inventory is full',1,true)then message(player,false,'Make room for all possible oak drops before harvesting.')
-                        elseif raw:find('required tool',1,true)then message(player,false,'Equip an axe in your inventory first.')
-                        elseif raw:find('cannot harvest',1,true)then message(player,false,'Your axe is not strong enough for this tree.')
+                        if raw:find('Inventory is full',1,true)then message(player,false,'Make room for all possible drops before harvesting.')
+                        elseif raw:find('required tool',1,true)then message(player,false,'Equip the required tool in your inventory first.')
+                        elseif raw:find('cannot harvest',1,true)then message(player,false,'Your tool is not strong enough for this resource.')
                         else warn('Resource harvest failed: '..raw);message(player,false,'Harvest could not complete safely. Try again.')end
                     end
                 end)

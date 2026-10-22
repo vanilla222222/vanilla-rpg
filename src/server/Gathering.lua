@@ -3,7 +3,10 @@ local Gathering={}
 function Gathering.create(resources,catalog,collections,Inventory,Rules,util)
     local api={};local MAX=9007199254740991
     for id,resource in pairs(resources)do
-        assert(resource.skill and resource.toolSlot and resource.cooldownSeconds>=1,'Invalid resource: '..id)
+        assert(resource.skill and resource.cooldownSeconds>=1,'Invalid resource: '..id)
+        assert((resource.toolSlot==nil and resource.requiredStat==nil and resource.requiredValue==nil)
+            or (type(resource.toolSlot)=='string' and type(resource.requiredStat)=='string'
+            and util.finite(resource.requiredValue) and resource.requiredValue>=0),'Incomplete tool requirement: '..id)
         for _,entry in ipairs(resource.loot)do
             local item=catalog.get(entry.itemId)
             assert(item and util.finite(entry.chance) and entry.chance>0 and entry.chance<=100,'Invalid resource loot')
@@ -44,10 +47,12 @@ function Gathering.create(resources,catalog,collections,Inventory,Rules,util)
     function api.harvest(data,stats,id,random)
         local resource=resources[id];assert(resource,'Unknown resource')
         Inventory.validate(data)
-        local reference=data.equipment[resource.toolSlot]
-        local tool=reference and data.equipmentItems[reference]
-        assert(tool and catalog.canEquip(tool.itemId,resource.toolSlot),'Equip the required tool first')
-        assert(stats[resource.requiredStat]>=resource.requiredValue,'Your tool cannot harvest this resource')
+        if resource.toolSlot then
+            local reference=data.equipment[resource.toolSlot]
+            local tool=reference and data.equipmentItems[reference]
+            assert(tool and catalog.canEquip(tool.itemId,resource.toolSlot),'Equip the required tool first')
+            assert(stats[resource.requiredStat]>=resource.requiredValue,'Your tool cannot harvest this resource')
+        end
         -- Reserve worst-case space before randomness so a full bag cannot reroll rare loot.
         local maximum={}
         for _,entry in ipairs(resource.loot)do
