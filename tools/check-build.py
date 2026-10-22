@@ -2,6 +2,7 @@
 """Verify Rojo maps source text and server/client boundaries into the place."""
 from pathlib import Path
 import sys
+import json
 import xml.etree.ElementTree as ET
 
 root = ET.parse(sys.argv[1] if len(sys.argv) > 1 else 'build/vanilla-rpg.rbxlx').getroot()
@@ -31,4 +32,18 @@ for path, (source, kind) in expected.items():
 assert instances['/StarterPlayer/StarterCharacterScripts/Health'].attrib['class'] == 'Script'
 assert instances['/Workspace/Spawn'].attrib['class'] == 'SpawnLocation'
 assert not any('SessionStore' in path for path in instances if path.startswith('/ReplicatedStorage'))
+# Author-placed models must survive live synchronization at every configured folder.
+project=json.loads(Path('default.project.json').read_text())
+home=project['tree']['Workspace']['Home']
+assert home['$ignoreUnknownInstances'] is True
+folders=home['ResourceInteractions']
+assert folders['$ignoreUnknownInstances'] is True
+for skill in ['foraging','mining','farming','fishing','combat']:
+    assert folders[skill]['$ignoreUnknownInstances'] is True
+    assert instances['/Workspace/Home/ResourceInteractions/'+skill].attrib['class']=='Folder'
+assert folders['foraging']['oak']['$ignoreUnknownInstances'] is True
+assert '/Workspace/Home/ResourceInteractions/foraging/oak' in instances
+for skill in ['heavyMelee','lightMelee','magic','ranged']:
+    assert folders['combat'][skill]['$ignoreUnknownInstances'] is True
+    assert '/Workspace/Home/ResourceInteractions/combat/'+skill in instances
 print(f'Rojo mapping passed: {len(expected)} scripts match source; persistence stays server-only; spawn exists.')

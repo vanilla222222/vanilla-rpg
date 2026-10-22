@@ -11,8 +11,8 @@ and stays inside the screen. Closing Inventory hides the card.
 
 A swap returns the old item to the selected bag slot; it works even when the bag
 is full. Unequipping into a full bag is refused without changing either item.
-Crafting remains a placeholder. No crafting or tool/combat actions
-are implied by equipping an item.
+Crafting remains a placeholder. The axe enables [oak harvesting](RESOURCES.md); other tool/combat actions
+are pending.
 
 ## Ownership and persistence
 
@@ -60,12 +60,16 @@ rarity, properties and stat modifiers.
 
 ## Verification
 
-61 portable Lua tests cover equipment stat application/removal, reconstruction,
+Portable Lua tests cover equipment stat application/removal, reconstruction,
 transactional swaps, invalid/replayed requests, reserved sources, duplicate/broken
 references, requirements, full bags and a fake-store save/reload round trip.
 A real InventoryUI controller test drives clicks/hover through GUI adapters and
 server equipment logic, including applying/removing bonuses. This is not a real
 Roblox renderer or hit-test. Server request limiting now accepts a short burst
 and returns an explicit message instead of silently discarding rapid actions.
-Rojo builds and embeds all 22 scripts. Icon appearance, selection controls and
+Rojo builds and embeds all source scripts. Icon appearance, selection controls and
 live Humanoid/stat updates still require Roblox Studio testing.
+
+Known talismans in the automatic bag contribute reserved `talisman:<id>` modifiers.
+Copies count as ownership but do not multiply a passive bonus. These modifiers
+rebuild on join alongside equipment and cannot be replaced by other sources.

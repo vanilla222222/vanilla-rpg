@@ -63,6 +63,54 @@
           ],
           "Neutral": true
         }
+      },
+      "Home": {
+        "$className": "Folder",
+        "$ignoreUnknownInstances": true,
+        "ResourceInteractions": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "foraging": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "oak": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true
+            }
+          },
+          "mining": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true
+          },
+          "farming": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true
+          },
+          "fishing": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true
+          },
+          "combat": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "heavyMelee": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true
+            },
+            "lightMelee": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true
+            },
+            "magic": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true
+            },
+            "ranged": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true
+            }
+          }
+        }
       }
     }
   }

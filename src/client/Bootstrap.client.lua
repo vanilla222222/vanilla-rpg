@@ -6,6 +6,7 @@ local Shared=ReplicatedStorage.Shared
 local itemTypes=require(Shared.ItemTypes)
 local itemCatalog=require(Shared.ItemCatalog).create(require(Shared.ItemDefinitions),itemTypes,definitions,require(Shared.TableUtil))
 local items=itemCatalog.all()
+local collectionDefinitions=require(Shared.CollectionDefinitions)
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("RPGRemotes")
 local color = {panel=Color3.fromRGB(19,27,39), card=Color3.fromRGB(29,40,55), line=Color3.fromRGB(58,76,97),
@@ -50,6 +51,7 @@ local defense=text(hud,"DEFENSE  0",UDim2.new(.58,-14,0,22),UDim2.fromOffset(14,
 local sprint=button(hud,"SPRINT OFF",UDim2.new(.42,-14,0,22),UDim2.new(.58,0,0,148));sprint.TextSize=10
 local inventoryButton=button(hud,"Inventory  [I]",UDim2.new(.5,-5,0,36),UDim2.new(0,0,0,-46))
 local statsButton=button(hud,"Stats  [C]",UDim2.new(.5,-5,0,36),UDim2.new(.5,5,0,-46))
+local collectionsButton=button(hud,"Collections",UDim2.new(1,0,0,32),UDim2.new(0,0,0,-86))
 local shade=make("TextButton",{Name="Backdrop",Text="",Visible=false,Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.4,AutoButtonColor=false,ZIndex=5},gui)
 local windows={}
 local function window(id,title,subtitle)
@@ -67,6 +69,7 @@ local function window(id,title,subtitle)
 end
 local inventoryContent=window("Inventory","INVENTORY","Crafting  /  Expandable inventory  /  Equipment")
 local statsContent=window("Stats","PLAYER STATS","Definitive sources → defined values → dynamic resources")
+local collectionsContent=window("Collections","COLLECTIONS & TALISMANS","Harvest totals / crafting and inventory transfers do not add collection credit")
 local function show(id)
     local opening=not windows[id].panel.Visible
     for _,w in pairs(windows)do w.panel.Visible=false end
@@ -75,6 +78,7 @@ end
 shade.Activated:Connect(function()for _,w in pairs(windows)do w.panel.Visible=false end;shade.Visible=false end)
 inventoryButton.Activated:Connect(function()show("Inventory")end)
 statsButton.Activated:Connect(function()show("Stats")end)
+collectionsButton.Activated:Connect(function()show("Collections")end)
 local function row(parent,left,right,order,tint)
     local card=make("Frame",{LayoutOrder=order,Size=UDim2.new(1,-8,0,36),BackgroundColor3=color.card},parent);round(card,7)
     text(card,left,UDim2.new(.64,-20,1,0),UDim2.fromOffset(12,0),13,tint)
@@ -85,6 +89,25 @@ local function section(parent,title,order)
     local label=text(parent,title,UDim2.new(1,-8,0,28),UDim2.new(),12,color.accent)
     label.LayoutOrder=order;label.Font=Enum.Font.GothamBold
 end
+local collectionLabels={}
+local collectionIds={};for id in pairs(collectionDefinitions)do table.insert(collectionIds,id)end;table.sort(collectionIds)
+for i,id in ipairs(collectionIds)do
+    collectionLabels[id]=row(collectionsContent,collectionDefinitions[id].name,"0 harvested",i)
+end
+local foragingXP=row(collectionsContent,"Foraging XP","0",10)
+section(collectionsContent,"TALISMAN BAG — PASSIVE BONUSES",11)
+local oakTalisman=row(collectionsContent,"Oak Talisman","Not collected",12)
+local notification=text(gui,"",UDim2.new(.9,0,0,72),UDim2.new(.05,0,0,22),16,color.accent)
+notification.TextWrapped=true;notification.TextXAlignment=Enum.TextXAlignment.Center
+notification.BackgroundColor3=color.panel;notification.BackgroundTransparency=.1
+notification.Visible=false;round(notification,10)
+local notificationId=0
+remotes.ResourceResult.OnClientEvent:Connect(function(ok,message)
+    notificationId=notificationId+1;local id=notificationId
+    notification.Text=message;notification.TextColor3=ok and color.accent or Color3.fromRGB(245,181,115)
+    notification.Visible=true
+    task.delay(5,function()if notificationId==id then notification.Visible=false end end)
+end)
 local statLabels={};local order=0
 for _,group in ipairs({"definitive","defined","dynamic"})do
     order=order+1;section(statsContent,string.upper(group).." STATS",order)
@@ -131,6 +154,11 @@ remotes.Snapshot.OnClientEvent:Connect(function(data)
         local definition=item and items[item.itemId]
         label.Text=definition and (tostring(definition.baseDamage).." damage") or "Empty"
     end
+    for id,label in pairs(collectionLabels)do label.Text=tostring((data.collections or {})[id]or 0).." harvested"end
+    foragingXP.Text=tostring(data.skills.foraging.xp)
+    local owned=(data.talismans or {}).oak_talisman
+    local count=owned==true and 1 or (type(owned)=="table"and owned.count or 0)
+    oakTalisman.Text=count>0 and (tostring(count).." owned · +5 fortune once")or "Not collected"
     renderInventory(data)
 end)
 remotes.RequestSnapshot:FireServer()

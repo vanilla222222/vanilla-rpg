@@ -26,6 +26,14 @@ function Equipment.create(catalog,util)
             end
         end
         for instanceId in pairs(data.equipmentItems)do assert(referenced[instanceId],"Unreferenced equipment item")end
+        for id,owned in pairs(data.talismans or {})do
+            local definition=catalog.get(id)
+            if definition and definition.kind=='talisman' then
+                local count=owned==true and 1 or (type(owned)=='table' and owned.count or 0)
+                assert(util.integer(count,1,9007199254740991),'Invalid talisman ownership')
+                result['talisman:'..id]=definition.stats -- Copies do not stack passive bonuses.
+            end
+        end
         return result
     end
     local function requirements(data,definition)

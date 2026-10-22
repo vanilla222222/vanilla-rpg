@@ -9,6 +9,9 @@ local Definitions = require(Shared.StatDefinitions)
 local ItemCatalog = require(Shared.ItemCatalog).create(require(Shared.ItemDefinitions),require(Shared.ItemTypes),Definitions,Util)
 local Equipment = require(script.Parent.Equipment).create(ItemCatalog,Util)
 local Inventory = require(script.Parent.Inventory).create(ItemCatalog,Util,Equipment)
+local ResourceDefinitions=require(Shared.ResourceDefinitions)
+local Gathering=require(script.Parent.Gathering).create(ResourceDefinitions,ItemCatalog,
+    require(Shared.CollectionDefinitions),Inventory,require(Shared.StatRules),Util)
 local Profile = require(script.Parent.Profile).create(Util)
 local Config = require(script.Parent.Config)
 local StarterItems = require(script.Parent.StarterItems)
@@ -47,6 +50,8 @@ local inventoryEvent=Instance.new("RemoteEvent")
 inventoryEvent.Name,inventoryEvent.Parent="Inventory",remotes
 local inventoryResult=Instance.new("RemoteEvent")
 inventoryResult.Name,inventoryResult.Parent="InventoryResult",remotes
+local resourceResult=Instance.new("RemoteEvent")
+resourceResult.Name,resourceResult.Parent="ResourceResult",remotes
 local sprintEvent = Instance.new("RemoteEvent")
 sprintEvent.Name, sprintEvent.Parent = "SetSprinting", remotes
 remotes.Parent = ReplicatedStorage -- Publish only once all endpoints exist.
@@ -75,7 +80,11 @@ local function publish(userId, reason)
     end
     snapshotEvent:FireClient(player, snapshot)
 end
-service = require(script.Parent.PlayerService).new(Profile, require(script.Parent.Stats), Definitions, Util, os.time, publish, require(script.Parent.Resources), Equipment, Inventory)
+service = require(script.Parent.PlayerService).new(Profile, require(script.Parent.Stats), Definitions, Util, os.time, publish, require(script.Parent.Resources), Equipment, Inventory, Gathering)
+local home=workspace:WaitForChild("Home",10)
+local resourceRoot=home and home:WaitForChild("ResourceInteractions",10)
+if resourceRoot then require(script.Parent.ResourceNodes).start(resourceRoot,service,ResourceDefinitions,resourceResult,ItemCatalog)
+else warn("Missing Workspace/Home/ResourceInteractions; sync default.project.json with Rojo")end
 
 local function save(player, release)
     local entry = service.get(player.UserId)

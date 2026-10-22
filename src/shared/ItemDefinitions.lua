@@ -1,7 +1,7 @@
 -- Permanent IDs. Example values are provisional; StarterItems grants the five-item starter kit once.
 -- ItemCatalog fills defaults and validates these records on server/client startup.
 local items = {
-    oak_log={name="Oak Log",kind="material",collection="oak",tags={"wood","foraging"},description="Basic wood harvested from oak trees."},
+    oak_log={name="Oak Wood",kind="material",collection="oak",tags={"wood","foraging"},description="Basic wood harvested from oak trees."},
     stone={name="Stone",kind="material",collection="stone",tags={"mining"},description="A basic building and crafting material."},
     refined_wood={name="Refined Wood",kind="craftingComponent",rarity="uncommon",tags={"wood","component"}},
     starter_axe={description="A riveted iron head on a wrapped oak handle. Built for your first trees.",name="Starter Axe",kind="tool",toolType="axe",stats={AxeStrength={flat=1},Sweep={flat=1}}},
@@ -17,6 +17,20 @@ local items = {
     health_tonic={name="Health Tonic",kind="consumable",effectId="restore_health",description="Effect implementation pending."},
     sealed_letter={name="Sealed Letter",kind="questItem",description="A quest object. Quest implementation pending."},
 }
+local oakMaterials={
+    oak_log={name='Oak Wood',collection='oak',rarity='common'},
+    oak_leaves={name='Oak Leaves',collection='oak_leaves',rarity='common'},
+    oak_stick={name='Oak Stick',collection='oak_stick',rarity='common'},
+    oak_sap={name='Oak Sap',collection='oak_sap',rarity='uncommon'},
+    oak_core={name='Oak Core',collection='oak_core',rarity='rare'},
+}
+for id,entry in pairs(oakMaterials)do
+    items[id]={name=entry.name,kind='material',collection=entry.collection,rarity=entry.rarity,
+        tags={'oak','foraging'},description='Gathered from oak trees. Tracks its own collection.'}
+    items['enchanted_'..id]={name='Enchanted '..entry.name,kind='craftingComponent',collection=entry.collection,
+        rarity='rare',tags={'oak','foraging','enchanted'},description='An enchanted form of '..entry.name..'. Crafting integration is pending.'}
+end
+items.oak_talisman.description='A rare oak charm. Automatically joins the talisman bag; its foraging bonus applies once.'
 for _,slot in ipairs({"helmet","chestplate","gloves","leggings","boots"}) do
     items["starter_"..slot]={name="Starter "..slot:gsub("^%l",string.upper),kind="armor",armorSlot=slot,
         stats={Vitality={flat=5},Defense={flat=1}}}

@@ -2,7 +2,8 @@
 
 A Roblox RPG inspired by collection-based progression. First milestone: player
 data and stats. Inventory ownership and equipment are implemented for the starter kit. Inventory transfer/stack handling and level-based expansion are implemented.
-Crafting and gathering are not implemented yet.
+Placeable oak harvesting, collection tracking and passive talismans are implemented.
+Crafting remains pending; enchanted material definitions are ready.
 
 ## Linux Mint / Vinegar quick start
 
@@ -19,7 +20,7 @@ rojo serve
 
 Keep the terminal running. In Studio, open `build/vanilla-rpg.rbxlx`, open the
 Rojo plugin and connect to `localhost:34872`. Press **Play**. Expect a baseplate,
-a bottom-left resource HUD and **Inventory / Stats** buttons. Open Studio's Output
+a bottom-left resource HUD and **Inventory / Stats / Collections** buttons. Open Studio's Output
 window when reporting errors. Press I for Inventory or C for Stats.
 
 Studio defaults to **temporary in-memory data**: no API access is required and
@@ -57,11 +58,13 @@ Engine behavior and real DataStore requests have not been verified in this envir
 - Private client snapshots, rate-limited snapshot requests and validated sprint controls.
 - One-time starter kit on join: axe, pickaxe, sword, hoe and fishing rod.
 - Validated item catalog: nine types, rarity/policy metadata, stat modifiers and
-  twenty provisional examples. See [item definitions](docs/ITEMS.md).
+  twenty-nine provisional items. See [item definitions](docs/ITEMS.md).
 - Move/swap/split/merge modes, paged level-based inventory expansion, server reward
   APIs and stale-request protection. See [inventory](docs/INVENTORY.md).
 - Inventory equip/unequip controls, five procedural starter icons, complete Stats
   window and compact bottom-left resource HUD. See [equipment](docs/EQUIPMENT.md).
+- Placeable resource folders for every skill; oak loot, XP, fortune/wisdom and
+  automatic talisman bag bonuses. See [placing resources](docs/RESOURCES.md).
 - Initial test baseplate. Unspecified numeric ceilings remain provisional balance.
 
 ## Source layout
@@ -80,11 +83,10 @@ Engine behavior and real DataStore requests have not been verified in this envir
 | `src/client` | Player HUD; no authority over progression |
 | `tests/run.lua` | Headless core and persistence fault tests |
 
-The bootstrap is the composition root. Future inventory/crafting/gathering services
-receive the PlayerService instance there; clients never receive session tokens or
-raw profile tables. Collection credit will be awarded by eligible gathering events,
-not by deposits, withdrawals, trades or crafting. Those rules are design commitments,
-not implemented gathering functionality.
+The bootstrap is the composition root. Activity services receive PlayerService
+there; clients never receive session tokens or raw profile tables. Oak harvests
+award collection credit; ordinary inventory grants and transfers do not. Storage,
+crafting, other resource types and skill/collection level formulas are pending.
 
 Hub storage has no intended gameplay stack-capacity limit, but Roblox storage and
 number limits still exist. Stack quantities are safe integers; unique equipment

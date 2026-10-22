@@ -24,7 +24,7 @@ No old Studio reward/drain remote should exist in either mode.
 - Stat modifiers are server-memory derived state; equipment/skill systems must
   rebuild them from saved progression. Modifier buffs are not persisted yet.
 - Currency counts use exact integers up to 2^53−1, not arbitrary precision.
-- Equip/unequip and stack transfers are available; crafting and gathering are deferred.
+- Equip/unequip and stack transfers are available; oak gathering is available; crafting is deferred.
 
 References:
 - https://create.roblox.com/docs/cloud-services/data-stores/player-data-purchasing
@@ -41,7 +41,7 @@ regeneration. Test respawn, Shift/touch sprint, focus release and maximum change
 Increasing a resource maximum must not instantly refill it. No player-facing
 debug reward or resource-drain buttons remain.
 
-Probability helpers remain headless-tested; their activity systems are deferred.
+Probability helpers are used by oak harvesting. Other activity systems remain deferred.
 
 ## Equipment and icons
 
@@ -70,3 +70,9 @@ Award 100 game XP through the server API: page two should unlock slot 31. Split 
 stack into that slot and merge it back onto page one. Old larger bags must not
 shrink. Keep Stats and hover checks working after equipment changes. These engine
 checks have not been run in this environment.
+
+## Placeable resources
+
+Follow [RESOURCES.md](RESOURCES.md) for placement, controls, loot rules and the
+Studio acceptance checklist. Native prompts, raycasts, replication and real
+DataStore persistence remain unverified in this host.

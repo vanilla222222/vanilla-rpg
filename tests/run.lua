@@ -282,6 +282,8 @@ test('private snapshot computes game level from exact integer XP', function()
     equal(snapshot.gameLevel,1.01);equal(snapshot.bank,99);equal(snapshot.inventory.capacity,30)
     snapshot.equipment.helmet='fake';equal(p.equipment.helmet,false)
 end)
+dofile('tests/resource-nodes.lua')(test,equal)
+dofile('tests/gathering.lua')(test,equal,rejects)
 dofile('tests/items.lua')(test,equal,rejects)
 dofile('tests/equipment.lua')(test,equal,rejects)
 dofile('tests/inventory.lua')(test,equal,rejects)
@@ -316,6 +318,6 @@ test('starter grant defers full bags without partial edits or overwritten items'
     assert(q.inventory.slots['1'].instanceId~=p.inventory.slots['1'].instanceId)
 end)
 -- Syntax-check all Roblox scripts even though engine APIs cannot run in this host.
-for _, file in ipairs({'src/server/Bootstrap.server.lua', 'src/server/Config.lua', 'src/client/Bootstrap.client.lua',
+for _, file in ipairs({'src/server/Bootstrap.server.lua', 'src/server/Config.lua', 'src/server/ResourceNodes.lua', 'src/client/Bootstrap.client.lua',
     'src/shared/ItemDefinitions.lua', 'src/character/Health.server.lua'}) do assert(loadfile(file)) end
 print(string.format('%d foundation tests passed; Roblox engine integration remains unverified.', passed))

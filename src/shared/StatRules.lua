@@ -1,4 +1,4 @@
--- Activity systems will use these rules when implemented; no gathering is added here.
+-- Shared probability helpers; outcomes are applied only by server activity systems.
 local Rules = {}
 local function finite(value)
     return type(value) == "number" and value == value and value > -math.huge and value < math.huge
