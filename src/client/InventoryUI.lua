@@ -1,6 +1,7 @@
 -- Inventory and equipment controls; crafting remains a visual placeholder.
 local InventoryUI = {}
-function InventoryUI.mount(content, make, text, round, color, items, itemTypes, remotes)
+function InventoryUI.mount(content, make, text, round, color, items, itemTypes, remotes, textures)
+    textures=textures or {}
     for _,child in ipairs(content:GetChildren()) do child:Destroy() end
     content.AutomaticCanvasSize=Enum.AutomaticSize.None
     content.ScrollingDirection=Enum.ScrollingDirection.XY
@@ -35,7 +36,7 @@ function InventoryUI.mount(content, make, text, round, color, items, itemTypes, 
         status.Text=message
         if ok then selectedBag,selectedEquipment=nil,nil end
     end)
-    local Icons=require(script.Parent.ItemIcons)
+    local Images=require(script.Parent.ItemImages)
     local tooltip=require(script.Parent.ItemTooltip).mount(content,make,text,round,color)
     local function slot(parent,name,x,y,size,caption,selection)
         local b=make("TextButton",{Name=name,Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(size,size),Text="",
@@ -72,10 +73,10 @@ function InventoryUI.mount(content, make, text, round, color, items, itemTypes, 
             local id=type(item)=="table" and (item.itemId or item.id) or item
             local title=id and (items[id] and items[id].name or tostring(id)) or nil
             if icon then icon:Destroy();icon=nil end
-            if id then icon=Icons.draw(b,id,make)end
+            if id then icon=Images.draw(b,textures[id],make)end
             if icon then
                 label.Position=UDim2.new(0,4,1,-20);label.Size=UDim2.new(1,-8,0,18)
-                label.TextSize=9;label.Text=title:gsub("^Starter ","")
+                label.TextSize=9;label.Text=title
             else
                 label.Position=UDim2.fromOffset(4,4);label.Size=UDim2.new(1,-8,1,-8)
                 label.TextSize=11;label.Text=title or empty or "—"

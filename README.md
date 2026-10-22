@@ -61,11 +61,18 @@ Engine behavior and real DataStore requests have not been verified in this envir
   thirty-three provisional items. See [item definitions](docs/ITEMS.md).
 - Move/swap/split/merge modes, paged level-based inventory expansion, server reward
   APIs and stale-request protection. See [inventory](docs/INVENTORY.md).
-- Inventory equip/unequip controls, five procedural starter icons, complete Stats
+- Inventory equip/unequip controls, configurable item image assets with name fallback, complete Stats
   window and compact bottom-left resource HUD. See [equipment](docs/EQUIPMENT.md).
 - Placeable resource folders for every skill; oak and raspberry loot, XP, fortune/wisdom and
   automatic talisman bag bonuses. See [placing resources](docs/RESOURCES.md).
 - Initial test baseplate. Unspecified numeric ceilings remain provisional balance.
+
+## Content editing
+
+The framework is built to make new content quick to configure so most development
+time can go into map design. Item properties, loot, timers and images belong in
+named definition files; reusable systems apply them. See the
+[content editing guide](docs/CONTENT-AUTHORING.md).
 
 ## Source layout
 

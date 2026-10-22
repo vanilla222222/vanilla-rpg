@@ -1,4 +1,4 @@
-# Equipment and starter icons
+# Equipment and item images
 
 ## Controls
 
@@ -51,12 +51,30 @@ inspection; it is not summed into a new global stat or used to attack anything.
 | Starter Hoe | FarmingFortune +5 (100 → 105) |
 | Starter Fishing Rod | MinSize +1; MaxSize +5 |
 
-`ItemIcons.lua` draws five distinct stylized icons from layered local GUI geometry:
-wood grain, leather wraps, bevelled metal, rivets, brass fittings and highlights.
-Slots use rarity-tinted fills and stronger borders, not just colored names.
-No image assets, uploads or external asset permissions are needed. Other items
-keep name-based slot labels until icons are added. Inspecting an item shows its
-rarity, properties and stat modifiers.
+Item artwork is configured in **`src/shared/ItemTextures.lua`**. It lists every
+permanent item ID with a readable name and a `decalId` placeholder. `nil` is Lua's
+null value: the slot shows the full item name. All entries start as `nil`.
+
+```lua
+starter_axe={name="Starter Axe",decalId=nil},
+-- To assign artwork, replace nil with your image asset ID:
+-- starter_axe={name="Starter Axe",decalId="rbxassetid://123456789"},
+```
+
+Use a positive image asset ID, a numeric string, or `rbxassetid://...`. For an
+uploaded Decal, copy the image ID from its Texture property. The entry's `name`
+is an editing label; change canonical names in `ItemDefinitions.lua`. No image
+assets are uploaded, generated or assigned automatically. The old procedural
+renderer has been removed. The legacy catalog `icon` field is retained for
+compatibility but is not read by inventory/equipment; this central file controls
+slot artwork.
+
+`ItemImages.lua` renders configured image assets in bag and equipment slots.
+Missing entries, nil/empty placeholders, zero and malformed IDs use full text
+names; known item rarity colors, quantity labels and hover cards remain. An
+assigned asset still needs appropriate Roblox permissions to load; the engine's
+image availability is not verified by the numeric ID parser. Stop and restart
+Play after editing the texture file so the required module reloads.
 
 ## Verification
 

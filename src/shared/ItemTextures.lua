@@ -1,0 +1,40 @@
+-- Central inventory/equipment artwork list, keyed by permanent item ID.
+-- nil is Lua's null: show the full item name instead of an image.
+-- Replace nil with a positive image asset ID or "rbxassetid://123456789".
+-- For a Decal, use the image ID from its Texture property. No assets are uploaded here.
+-- Names are editing labels; gameplay/display names remain in ItemDefinitions.lua.
+return {
+    copper_ring={name="Copper Ring",decalId=nil},
+    enchanted_oak_core={name="Enchanted Oak Core",decalId=nil},
+    enchanted_oak_leaves={name="Enchanted Oak Leaves",decalId=nil},
+    enchanted_oak_log={name="Enchanted Oak Wood",decalId=nil},
+    enchanted_oak_sap={name="Enchanted Oak Sap",decalId=nil},
+    enchanted_oak_stick={name="Enchanted Oak Stick",decalId=nil},
+    enchanted_raspberry={name="Enchanted Raspberry",decalId=nil},
+    enchanted_raspberry_thorn={name="Enchanted Raspberry Thorn",decalId=nil},
+    health_tonic={name="Health Tonic",decalId=nil},
+    oak_core={name="Oak Core",decalId=nil},
+    oak_leaves={name="Oak Leaves",decalId=nil},
+    oak_log={name="Oak Wood",decalId=nil},
+    oak_sap={name="Oak Sap",decalId=nil},
+    oak_stick={name="Oak Stick",decalId=nil},
+    oak_talisman={name="Oak Talisman",decalId=nil},
+    raspberry={name="Raspberry",decalId=nil},
+    raspberry_thorn={name="Raspberry Thorn",decalId=nil},
+    refined_wood={name="Refined Wood",decalId=nil},
+    sealed_letter={name="Sealed Letter",decalId=nil},
+    starter_axe={name="Starter Axe",decalId=nil},
+    starter_boots={name="Starter Boots",decalId=nil},
+    starter_bow={name="Starter Bow",decalId=nil},
+    starter_chestplate={name="Starter Chestplate",decalId=nil},
+    starter_fishing_rod={name="Starter Fishing Rod",decalId=nil},
+    starter_gloves={name="Starter Gloves",decalId=nil},
+    starter_greatsword={name="Starter Greatsword",decalId=nil},
+    starter_helmet={name="Starter Helmet",decalId=nil},
+    starter_hoe={name="Starter Hoe",decalId=nil},
+    starter_leggings={name="Starter Leggings",decalId=nil},
+    starter_pickaxe={name="Starter Pickaxe",decalId=nil},
+    starter_sword={name="Starter Sword",decalId=nil},
+    starter_wand={name="Starter Wand",decalId=nil},
+    stone={name="Stone",decalId=nil},
+}

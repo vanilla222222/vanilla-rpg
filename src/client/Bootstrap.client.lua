@@ -118,7 +118,7 @@ windows.Inventory.panel:FindFirstChildOfClass("UISizeConstraint").MaxSize=Vector
 local weaponLabels={}
 order=order+1;section(statsContent,"EQUIPPED WEAPON PROPERTIES",order)
 for i=1,4 do order=order+1;weaponLabels[i]=row(statsContent,"Weapon "..i,"Empty",order)end
-local renderInventory=require(script.Parent.InventoryUI).mount(inventoryContent,make,text,round,color,items,itemTypes,remotes)
+local renderInventory=require(script.Parent.InventoryUI).mount(inventoryContent,make,text,round,color,items,itemTypes,remotes,require(Shared.ItemTextures))
 local sprinting=false
 local function setSprint(enabled)sprinting=enabled;remotes.SetSprinting:FireServer(enabled)end
 sprint.Activated:Connect(function()setSprint(not sprinting)end)

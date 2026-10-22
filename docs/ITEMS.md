@@ -29,8 +29,9 @@ future inventory records must behave; only starter-kit instance creation is impl
 
 ## Common properties
 
-- `name`, `description`, `icon`: display fields; icon is blank or an `rbxassetid://`
-  reference. No uploaded icon assets are included.
+- `name`, `description`: item display fields. Inventory artwork is configured
+  separately in `ItemTextures.lua`; nil `decalId` uses the full name. The legacy
+  `icon` property remains accepted but is not used by the slot renderer.
 - `rarity`: common, uncommon, rare, epic, legendary, mythic. Inventory slots use
   the corresponding color and inspection text.
 - `maxStack`: positive integer, at most 1,000,000; unique gear must stay at one.

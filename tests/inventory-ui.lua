@@ -23,12 +23,15 @@ return function(test,equal,rejects)
             UDim2={new=function(...)return {...}end,fromOffset=function(x,y)return {x,y}end,fromScale=function(x,y)return {x,y}end}
             Vector2={new=function(x,y)return {X=x,Y=y}end}
             game={GetService=function(_,name)assert(name=='HttpService');return {JSONEncode=function(_,data)return tostring(data)end}end}
-            script={Parent={ItemIcons='icons',ItemTooltip='tooltip'}}
+            script={Parent={ItemImages='images',ItemTooltip='tooltip'}}
             local hover={}
             local tooltip={show=function(button,item,rarity,action)hover={button=button,item=item,rarity=rarity,action=action}end,
                 hide=function(button)if not button or hover.button==button then hover={}end end}
-            local icons=dofile('src/client/ItemIcons.lua')
-            require=function(path)if path=='icons'then return icons elseif path=='tooltip'then return {mount=function()return tooltip end}end;error('Unexpected dependency')end
+            local images=dofile('src/client/ItemImages.lua')
+            local textures=dofile('src/shared/ItemTextures.lua')
+            -- Exercise both modes independently of artwork assigned by map/content authors.
+            for _,entry in pairs(textures)do entry.decalId=nil end
+            require=function(path)if path=='images'then return images elseif path=='tooltip'then return {mount=function()return tooltip end}end;error('Unexpected dependency')end
             local objects={}
             local function make(kind,props,parent)
                 local obj={ClassName=kind,children={},attributes={},AbsoluteSize={X=1080,Y=550},Parent=parent}
@@ -66,27 +69,46 @@ return function(test,equal,rejects)
                 inventoryResult:Fire(success,success and 'Inventory updated' or tostring(reason))
                 assert(success,tostring(reason))
             end}
-            render=dofile('src/client/InventoryUI.lua').mount(content,make,text,function()end,color,catalog.all(),types,remotes)
+            render=dofile('src/client/InventoryUI.lua').mount(content,make,text,function()end,color,catalog.all(),types,remotes,textures)
             render(service.snapshot(1))
             local function find(parent,name)
                 for _,o in ipairs(objects)do if o.Name==name and (not parent or o.Parent==parent)then return o end end
                 error('Missing '..name)
             end
+            local function activeIcons(parent)
+                local found={}
+                for _,o in ipairs(objects)do
+                    if o.Name=='ItemIcon' and not o.destroyed and (not parent or o.Parent==parent)then table.insert(found,o)end
+                end
+                return found
+            end
+            local function labelFor(parent)
+                for _,o in ipairs(parent.children)do if o.ClassName=='TextLabel' and o.Text~='' and not o.destroyed then return o end end
+                error('Missing slot name')
+            end
             local bag=find(nil,'Inventory');local slot=find(bag,'Slot 1')
+            equal(#activeIcons(),0);equal(labelFor(slot).Text,'Starter Axe')
+            textures.starter_axe.decalId='rbxassetid://12345'
+            render(service.snapshot(1))
+            equal(#activeIcons(slot),1);equal(activeIcons(slot)[1].ClassName,'ImageLabel')
+            equal(activeIcons(slot)[1].Image,'rbxassetid://12345')
+            equal(labelFor(find(bag,'Slot 2')).Text,'Starter Pickaxe')
             slot.MouseEnter:Fire();equal(hover.item.name,'Starter Axe');assert(#hover.item.description>0)
             equal(hover.item.stats.Sweep.flat,1);equal(hover.rarity.label,'Common');equal(slot.attributes.Rarity,'common')
             assert(slot.BackgroundColor3.R~=color.panel.R)
             slot.MouseLeave:Fire();equal(hover.item,nil)
             slot.Activated:Fire();equal(service.snapshot(1).stats.Sweep,1)
             local equipped=find(nil,'Equipment');local axe=find(equipped,'Axe')
+            equal(#activeIcons(axe),1);equal(activeIcons(axe)[1].Image,'rbxassetid://12345')
             axe.MouseEnter:Fire();equal(hover.item.name,'Starter Axe');equal(hover.action,'Click to unequip')
             axe.Activated:Fire();equal(service.snapshot(1).stats.Sweep,0)
             for i=1,5 do find(bag,'Slot '..i).Activated:Fire()end
             equal(service.snapshot(1).stats.MiningSpeed,10);equal(service.snapshot(1).stats.FarmingFortune,105)
             assert(service.snapshot(1).equipment.weapon1)
-            local iconCount=0
-            for _,o in ipairs(objects)do if o.Name=='ItemIcon' and not o.destroyed then iconCount=iconCount+1 end end
-            assert(iconCount>=5,'Starter icons must render through the actual icon module')
+            equal(#activeIcons(),1) -- Only the configured axe has an image.
+            textures.starter_axe.decalId=nil
+            render(service.snapshot(1))
+            equal(#activeIcons(),0);equal(labelFor(axe).Text,'Starter Axe')
             service.grantGameXP(1,100);equal(service.snapshot(1).inventory.capacity,31)
             service.grantStack(1,'stone',10)
             find(bag,'Mode_split').Activated:Fire();find(bag,'Slot 1').Activated:Fire()

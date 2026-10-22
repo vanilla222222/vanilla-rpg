@@ -45,7 +45,7 @@ Probability helpers are used by oak harvesting. Other activity systems remain de
 
 ## Equipment and icons
 
-Check the five starter icons in the bag. Equip every starter item, open Stats and
+With all ItemTextures decalId fields nil, check full starter names in the bag. Equip every starter item, open Stats and
 verify the properties listed in EQUIPMENT.md. Unequip to remove bonuses. Repeat
 with persistent test data and rejoin: equipped ownership and bonuses must survive.
 Test a full bag and wrong target slot; no item should disappear or duplicate.
@@ -59,7 +59,9 @@ window. Click each bag item directly, then each equipped item directly; verify
 slot movement and bonuses. Check this at a small viewport without accessing footer
 buttons. Verify rapid ordinary clicks are not silently lost. If an operation fails,
 copy the server-side `Equipment request failed` Output message for diagnosis.
-Inspect rarity fills and the revised icons at normal and reduced UI scale.
+Inspect rarity fills and text labels at normal and reduced UI scale. Assign one
+permitted image ID in ItemTextures.lua, restart Play and confirm its image in
+both bag and equipment. Restore nil and confirm the full name returns.
 
 ## Inventory transfers and expansion
 
